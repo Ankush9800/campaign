@@ -11,25 +11,18 @@ require('dotenv').config({ path: '../.env' });
 
 const app = express();
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Database connection with options
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
-const allowedOrigins = [
-  'https://taskwala.netlify.app',
-  'http://localhost:3000'
-];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['https://taskwala.netlify.app', 'http://localhost:3000'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -38,18 +31,18 @@ app.use(express.json());
 
 // Session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET, // Use a strong secret key
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI, // Store sessions in MongoDB
-    ttl: 14 * 24 * 60 * 60 // 14 days
+    mongoUrl: process.env.MONGODB_URI,
+    ttl: 14 * 24 * 60 * 60
   }),
   cookie: { 
-    secure: process.env.NODE_ENV === 'production', // HTTPS in production
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-site cookies
-    httpOnly: true, // Prevent client-side JS from accessing the cookie
-    maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    httpOnly: true,
+    maxAge: 14 * 24 * 60 * 60 * 1000
   }
 }));
 
@@ -58,22 +51,20 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Passport Local Strategy
-passport.use(
-  new LocalStrategy(
-    { usernameField: 'username' },
-    async (username, password, done) => {
-      try {
-        const admin = await Admin.findOne({ username });
-        if (!admin) return done(null, false);
-
-        const isValid = await bcrypt.compare(password, admin.password);
-        return isValid ? done(null, admin) : done(null, false);
-      } catch (err) {
-        return done(err);
-      }
+passport.use(new LocalStrategy(
+  { usernameField: 'username' },
+  async (username, password, done) => {
+    try {
+      const admin = await Admin.findOne({ username });
+      if (!admin) return done(null, false);
+      
+      const isValid = await bcrypt.compare(password, admin.password);
+      return isValid ? done(null, admin) : done(null, false);
+    } catch (err) {
+      return done(err);
     }
-  )
-);
+  }
+));
 
 passport.serializeUser((admin, done) => done(null, admin.id));
 passport.deserializeUser(async (id, done) => {
@@ -96,12 +87,11 @@ app.get('/admin/check-auth', (req, res) => {
   res.json({ authenticated: req.isAuthenticated() });
 });
 
-// Logout route
 app.get('/api/auth/logout', (req, res) => {
   req.logout((err) => {
-    if (err) return res.status(500).json({ message: 'Error logging out' });
+    if (err) return res.status(500).json({ message: 'Logout error' });
     req.session.destroy((err) => {
-      if (err) return res.status(500).json({ message: 'Error destroying session' });
+      if (err) return res.status(500).json({ message: 'Session destruction error' });
       res.clearCookie('connect.sid');
       res.json({ message: 'Logged out successfully' });
     });

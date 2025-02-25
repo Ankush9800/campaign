@@ -10,12 +10,15 @@ export default function LoginForm() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        'https://taskwala-backend.onrender.com/api/auth/login',
-        { username, password },
-        { withCredentials: true } // Include cookies
+        '/api/auth/login', 
+        { username, password }
       );
-      console.log('Login response:', response.data);
-      window.location.href = '/admin'; // Redirect to admin panel
+      
+      // Wait 500ms for cookie to set before checking auth
+      setTimeout(() => {
+        window.location.href = '/admin';
+      }, 500);
+      
     } catch (err) {
       setError('Invalid credentials');
     }
