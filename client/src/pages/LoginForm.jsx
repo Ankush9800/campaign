@@ -10,7 +10,7 @@ export default function LoginForm() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        '/api/auth/login', 
+        'https://taskwala-backend.onrender.com/api/auth/login', 
         { username, password }
       );
       
