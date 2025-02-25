@@ -5,8 +5,9 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const MongoStore = require('connect-mongo');
 const Admin = require('./models/Admin');
-require('dotenv').config({ path: '../.env' }); // Load .env from root
+require('dotenv').config({ path: '../.env' });
 
 const app = express();
 
@@ -16,11 +17,9 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
-<<<<<<< HEAD
 const allowedOrigins = [
   'https://taskwala.netlify.app',
-  'https://taskwala.netlify.app/', // Include both formats
-  'http://localhost:3000' // For local testing
+  'http://localhost:3000'
 ];
 
 app.use(cors({
@@ -32,21 +31,24 @@ app.use(cors({
     }
   },
   credentials: true,
-=======
-app.use(cors({
-  origin: 'https://taskwala.netlify.app/', // Allow requests from this origin
-  credentials: true, // Allow cookies and credentials
->>>>>>> e19ccf6f (Added all files)
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
+
+// Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    ttl: 14 * 24 * 60 * 60 // 14 days
+  }),
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days
   }
 }));
 
@@ -57,7 +59,7 @@ app.use(passport.session());
 // Passport Local Strategy
 passport.use(
   new LocalStrategy(
-    { usernameField: 'username' }, // Match the field name in your form
+    { usernameField: 'username' },
     async (username, password, done) => {
       try {
         const admin = await Admin.findOne({ username });
@@ -76,11 +78,13 @@ passport.serializeUser((admin, done) => done(null, admin.id));
 passport.deserializeUser(async (id, done) => {
   try {
     const admin = await Admin.findById(id);
+    if (!admin) return done(new Error('Admin not found'));
     done(null, admin);
   } catch (err) {
     done(err);
   }
 });
+
 // Routes
 const authRoutes = require('./routes/auth');
 const campaignRoutes = require('./routes/campaigns');
@@ -88,14 +92,21 @@ const payoutRoutes = require('./routes/payouts');
 const usersRouter = require('./routes/users');
 
 app.get('/admin/check-auth', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({ authenticated: true });
-  } else {
-    res.json({ authenticated: false });
-  }
+  res.json({ authenticated: req.isAuthenticated() });
 });
 
-// Route handlers
+// Logout route
+app.get('/api/auth/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) return res.status(500).json({ message: 'Error logging out' });
+    req.session.destroy((err) => {
+      if (err) return res.status(500).json({ message: 'Error destroying session' });
+      res.clearCookie('connect.sid');
+      res.json({ message: 'Logged out successfully' });
+    });
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/payouts', payoutRoutes);

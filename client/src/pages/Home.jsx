@@ -7,11 +7,9 @@ export default function Home() {
 
   useEffect(() => {
     const fetchCampaigns = async () => {
-<<<<<<< HEAD
+
       const response = await fetch('https://taskwala-backend.onrender.com/api/campaigns');
-=======
-      const response = await fetch('http://localhost:5000/api/campaigns');
->>>>>>> e19ccf6f (Added all files)
+
       const data = await response.json();
       setCampaigns(data);
     };
