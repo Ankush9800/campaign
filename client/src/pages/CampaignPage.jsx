@@ -18,7 +18,11 @@ export default function CampaignPage() {
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
+<<<<<<< HEAD
         const response = await fetch(`https://taskwala-backend.onrender.com/api/campaigns/${id}`);
+=======
+        const response = await fetch(`http://localhost:5000/api/campaigns/${id}`);
+>>>>>>> e19ccf6f (Added all files)
         if (!response.ok) throw new Error('Campaign not found');
         const data = await response.json();
         setCampaign(data);
@@ -55,7 +59,11 @@ export default function CampaignPage() {
       }
 
       // Submit user details to backend
+<<<<<<< HEAD
       await axios.post('https://taskwala-backend.onrender.com/api/users', {
+=======
+      await axios.post('http://localhost:5000/api/users', {
+>>>>>>> e19ccf6f (Added all files)
         phone: formData.phone,
         upiId: formData.upiId,
         campaignId: id

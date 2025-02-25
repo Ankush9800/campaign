@@ -16,6 +16,7 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
+<<<<<<< HEAD
 const allowedOrigins = [
   'https://taskwala.netlify.app',
   'https://taskwala.netlify.app/', // Include both formats
@@ -31,6 +32,11 @@ app.use(cors({
     }
   },
   credentials: true,
+=======
+app.use(cors({
+  origin: 'https://taskwala.netlify.app/', // Allow requests from this origin
+  credentials: true, // Allow cookies and credentials
+>>>>>>> e19ccf6f (Added all files)
 }));
 
 app.use(express.json());

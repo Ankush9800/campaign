@@ -21,7 +21,11 @@ export default function AdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);
 
   useEffect(() => {
+<<<<<<< HEAD
   axios.get('https://taskwala-backend.onrender.com/admin/check-auth', { 
+=======
+  axios.get('http://localhost:5000/admin/check-auth', { 
+>>>>>>> e19ccf6f (Added all files)
     withCredentials: true // Include cookies
   })
     .then(res => setIsAuthenticated(res.data.authenticated))
@@ -33,14 +37,22 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+<<<<<<< HEAD
         const campaignsRes = await axios.get('https://taskwala-backend.onrender.com/api/campaigns');
+=======
+        const campaignsRes = await axios.get('http://localhost:5000/api/campaigns');
+>>>>>>> e19ccf6f (Added all files)
         setCampaigns(campaignsRes.data);
       } catch (err) {
         setError('Failed to load campaigns. Please try refreshing the page.');
       }
 
       try {
+<<<<<<< HEAD
         const usersRes = await axios.get('https://taskwala-backend.onrender.com/api/users');
+=======
+        const usersRes = await axios.get('http://localhost:5000/api/users');
+>>>>>>> e19ccf6f (Added all files)
         setUsers(usersRes.data);
       } catch (err) {
         setError('Failed to load user data. User management features disabled.');
@@ -66,8 +78,13 @@ export default function AdminDashboard() {
 
     try {
       const url = editingCampaign 
+<<<<<<< HEAD
         ? `https://taskwala-backend.onrender.com/api/campaigns/${editingCampaign._id}`
         : 'https://taskwala-backend.onrender.com/api/campaigns';
+=======
+        ? `http://localhost:5000/api/campaigns/${editingCampaign._id}`
+        : 'http://localhost:5000/api/campaigns';
+>>>>>>> e19ccf6f (Added all files)
       
       const method = editingCampaign ? 'PUT' : 'POST';
       
@@ -120,7 +137,11 @@ export default function AdminDashboard() {
   const deleteCampaign = async (id) => {
     if(window.confirm('Are you sure you want to delete this campaign? This action cannot be undone.')) {
       try {
+<<<<<<< HEAD
         await axios.delete(`https://taskwala-backend.onrender.com/api/campaigns/${id}`);
+=======
+        await axios.delete(`http://localhost:5000/api/campaigns/${id}`);
+>>>>>>> e19ccf6f (Added all files)
         setCampaigns(campaigns.filter(c => c._id !== id));
       } catch (err) {
         handleApiError(err, 'delete campaign');
@@ -131,7 +152,11 @@ export default function AdminDashboard() {
   // User payout status update
   const updatePayoutStatus = async (userId, status) => {
     try {
+<<<<<<< HEAD
       await axios.patch(`https://taskwala-backend.onrender.com/api/users/${userId}/status`, { status });
+=======
+      await axios.patch(`http://localhost:5000/api/users/${userId}/status`, { status });
+>>>>>>> e19ccf6f (Added all files)
       setUsers(users.map(u => u._id === userId ? { ...u, payoutStatus: status } : u));
     } catch (err) {
       console.error('Error updating payout status:', err);
@@ -143,7 +168,11 @@ export default function AdminDashboard() {
     const deleteUser = async (userId) => {
     if (window.confirm('Permanently delete this user record?')) {
       try {
+<<<<<<< HEAD
         await axios.delete(`https://taskwala-backend.onrender.com/api/users/${userId}`);
+=======
+        await axios.delete(`http://localhost:5000/api/users/${userId}`);
+>>>>>>> e19ccf6f (Added all files)
         setUsers(users.filter(u => u._id !== userId));
       } catch (err) {
         console.error('Error deleting user:', err);
@@ -186,7 +215,11 @@ export default function AdminDashboard() {
       <div>
       {/* Admin panel content */}
       <button 
+<<<<<<< HEAD
         onClick={() => axios.get('https://taskwala-backend.onrender.com/logout')}
+=======
+        onClick={() => axios.get('http://localhost:5000/logout')}
+>>>>>>> e19ccf6f (Added all files)
         className="bg-red-500 text-white px-4 py-2 rounded"
       >
         Logout
