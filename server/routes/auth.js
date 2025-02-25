@@ -9,9 +9,15 @@ router.post('/login',
 );
 
 // Backend route
-app.get('/logout', (req, res) => {
-  req.logout();
-  res.sendStatus(200);
+router.get('/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) return res.status(500).json({ message: 'Error logging out' });
+    req.session.destroy((err) => {
+      if (err) return res.status(500).json({ message: 'Error destroying session' });
+      res.clearCookie('connect.sid');
+      res.json({ message: 'Logged out successfully' });
+    });
+  });
 });
 
 router.get('/logout', authController.logout);
