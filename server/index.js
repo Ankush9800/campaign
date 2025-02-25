@@ -38,16 +38,17 @@ app.use(express.json());
 
 // Session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET, // Use a strong secret key
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
+    mongoUrl: process.env.MONGODB_URI, // Store sessions in MongoDB
     ttl: 14 * 24 * 60 * 60 // 14 days
   }),
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: process.env.NODE_ENV === 'production', // HTTPS in production
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Cross-site cookies
+    httpOnly: true, // Prevent client-side JS from accessing the cookie
     maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days
   }
 }));

@@ -9,11 +9,12 @@ export default function LoginForm() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
+      const response = await axios.post(
         'https://taskwala-backend.onrender.com/api/auth/login',
         { username, password },
-        { withCredentials: true } // 👈 Include cookies
+        { withCredentials: true } // Include cookies
       );
+      console.log('Login response:', response.data);
       window.location.href = '/admin'; // Redirect to admin panel
     } catch (err) {
       setError('Invalid credentials');
