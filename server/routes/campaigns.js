@@ -1,10 +1,7 @@
 const express = require('express');
-const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 const router = express.Router();
 const Campaign = require('../models/Campaign');
-
-// Protect all routes with Clerk authentication
-router.use(ClerkExpressRequireAuth());
+const authController = require('../controllers/authController'); // Import authController
 
 // Get all campaigns
 router.get('/', async (req, res) => {
@@ -35,10 +32,9 @@ router.put('/:id', async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     );
-    
+
     if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
     res.json(campaign);
-    
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
