@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path'); // Add this line
 require('dotenv').config({ path: '../.env' });
 
 const app = express();
@@ -24,9 +23,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// Serve static files from the React app
-app.use(express.static(path.join(__dirname, '../client/build'))); // Add this line
-
 // No authentication or protection
 app.use('/admin', (req, res, next) => {
   next(); // Allow all requests to /admin
@@ -42,11 +38,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/payouts', payoutRoutes);
 app.use('/api/users', usersRouter);
-
-// Serve the React app for all other routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build', 'index.html')); // Add this line
-});
 
 // Start the server
 const PORT = process.env.PORT || 5000;
