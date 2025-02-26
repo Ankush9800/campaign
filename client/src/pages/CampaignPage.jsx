@@ -155,7 +155,7 @@ export default function CampaignPage() {
                 disabled={submitting}
                 className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400"
               >
-                {submitting ? 'Submitting...' : 'Proceed to Tracking'}
+                {submitting ? 'Submitting...' : 'Submit'}
               </button>
             </form>
             

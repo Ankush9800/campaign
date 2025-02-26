@@ -180,13 +180,6 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto flex gap-8">
       <div>
       {/* Admin panel content */}
-      <button 
-        onClick={() => axios.get('https://taskwala-backend.onrender.com/logout')}
-
-        className="bg-red-500 text-white px-4 py-2 rounded"
-      >
-        Logout
-      </button>
     </div>
         {/* Left Column - Campaign Management */}
         <div className="flex-1 max-w-2xl">
