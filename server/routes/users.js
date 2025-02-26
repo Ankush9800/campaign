@@ -1,9 +1,13 @@
 const express = require('express');
+const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 const router = express.Router();
 const User = require('../models/User');
 
-// POST - Create or update user
-router.post('/', async (req, res) => {
+// Protect all routes with Clerk authentication
+router.use(ClerkExpressRequireAuth());
+
+// POST - Create or update user (admin-only)
+router.post('/', authController.isAdmin, async (req, res) => {
   try {
     const { phone, upiId, campaignId } = req.body;
 

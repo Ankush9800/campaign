@@ -1,11 +1,19 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client'; // Import createRoot
+import './index.css';
 import App from './App';
-import './index.css'; 
+import { ClerkProvider } from '@clerk/clerk-react';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const publishableKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
+
+// Use createRoot instead of ReactDOM.render
+const container = document.getElementById('root');
+const root = createRoot(container); // Create a root
+
 root.render(
   <React.StrictMode>
-    <App />
+    <ClerkProvider publishableKey={publishableKey}>
+      <App />
+    </ClerkProvider>
   </React.StrictMode>
 );

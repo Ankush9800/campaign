@@ -1,6 +1,10 @@
 const express = require('express');
+const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 const router = express.Router();
 const Campaign = require('../models/Campaign');
+
+// Protect all routes with Clerk authentication
+router.use(ClerkExpressRequireAuth());
 
 // Get all campaigns
 router.get('/', async (req, res) => {
@@ -12,8 +16,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create campaign
-router.post('/', async (req, res) => {
+// Create campaign (admin-only)
+router.post('/', authController.isAdmin, async (req, res) => {
   try {
     const campaign = new Campaign(req.body);
     await campaign.save();

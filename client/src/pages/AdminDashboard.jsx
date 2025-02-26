@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import LoginForm from './LoginForm';
+import { useUser, useClerk } from '@clerk/clerk-react'; // Import Clerk hooks
 
 export default function AdminDashboard() {
+  const { user, isSignedIn } = useUser(); // Get user and authentication state from Clerk
+  const { signOut } = useClerk(); // Clerk's signOut function
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     trackingUrl: '',
     payoutRate: '',
-    status: 'active'
+    status: 'active',
   });
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const [campaigns, setCampaigns] = useState([]);
   const [users, setUsers] = useState([]);
@@ -20,41 +21,40 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [showUserModal, setShowUserModal] = useState(false);
 
+  // Check if the user is an admin
   useEffect(() => {
-  axios.get('https://taskwala-backend.onrender.com/admin/check-auth', { 
-    withCredentials: true // Include cookies
-  })
-    .then(res => setIsAuthenticated(res.data.authenticated))
-    .catch(() => setIsAuthenticated(false))
-    .finally(() => setLoading(false)); // Ensure loading is set to false
-}, []);
+    if (isSignedIn && user.publicMetadata.role !== 'admin') {
+      signOut(); // Sign out non-admin users
+      window.location.href = '/'; // Redirect to home page
+    }
+  }, [isSignedIn, user, signOut]);
 
-  // Fetch campaigns and users with separate error handling
+  // Fetch campaigns and users
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const campaignsRes = await axios.get('https://taskwala-backend.onrender.com/api/campaigns');
+        const [campaignsRes, usersRes] = await Promise.all([
+          axios.get('https://taskwala-backend.onrender.com/api/campaigns'),
+          axios.get('https://taskwala-backend.onrender.com/api/users'),
+        ]);
 
         setCampaigns(campaignsRes.data);
-      } catch (err) {
-        setError('Failed to load campaigns. Please try refreshing the page.');
-      }
-
-      try {
-
-        const usersRes = await axios.get('https://taskwala-backend.onrender.com/api/users');
-
         setUsers(usersRes.data);
       } catch (err) {
-        setError('Failed to load user data. User management features disabled.');
+        setError('Failed to load data. Please try refreshing the page.');
+      } finally {
+        setLoading(false);
       }
     };
-    
-    fetchData();
-  }, []);
+
+    if (!isSignedIn) fetchData(); // Fetch data only if the user is signed in
+  }, [isSignedIn]);
+
+  if (!isSignedIn) {
+    return <div>Redirecting to login...</div>; // Clerk will handle the redirect
+  }
 
   if (loading) return <div>Loading...</div>;
-  if (!isAuthenticated) return <LoginForm />;
 
   // Campaign form submission
   const handleCampaignSubmit = async (e) => {

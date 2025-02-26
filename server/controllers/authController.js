@@ -1,23 +1,23 @@
-const passport = require('passport');
-const Admin = require('../models/Admin');
+const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 
-exports.login = (req, res, next) => {
-  passport.authenticate('local', (err, admin, info) => {
-    if (err) return next(err);
-    if (!admin) return res.status(400).json({ error: 'Invalid credentials' });
+// Middleware to check if the user is authenticated
+const checkAuth = ClerkExpressRequireAuth();
 
-    req.logIn(admin, (err) => {
-      if (err) return next(err);
-      return res.json({ success: true });
-    });
-  })(req, res, next);
+// Middleware to check if the user is an admin
+const isAdmin = (req, res, next) => {
+  if (req.auth.claims.publicMetadata.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized: Admin access required' });
+  }
+  next();
 };
 
-exports.logout = (req, res) => {
-  req.logout();
-  res.json({ success: true });
+// Logout (optional, Clerk handles session management)
+const logout = (req, res) => {
+  res.json({ message: 'Logout handled by Clerk' });
 };
 
-exports.checkAuth = (req, res) => {
-  res.json({ authenticated: req.isAuthenticated() });
+module.exports = {
+  checkAuth,
+  isAdmin,
+  logout,
 };

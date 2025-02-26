@@ -10,6 +10,8 @@ const Admin = require('./models/Admin');
 require('dotenv').config({ path: '../.env' });
 
 const app = express();
+const { Clerk } = require('@clerk/clerk-sdk-node');
+const clerk = new Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
 
 // Database connection with options
 mongoose.connect(process.env.MONGODB_URI, {
