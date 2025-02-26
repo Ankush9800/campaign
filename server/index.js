@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { requireAuth } = require('@clerk/express');
 const cors = require('cors');
 require('dotenv').config({ path: '../.env' });
 
@@ -24,21 +23,9 @@ app.use(cors({
 
 app.use(express.json());
 
-// Clerk middleware for authentication
-app.use(
-  requireAuth({
-    secretKey: process.env.CLERK_SECRET_KEY,
-  })
-);
-
-// Example protected route with Clerk
-app.get('/admin/check-auth', (req, res) => {
-  res.json({ authenticated: true });
-});
-
-// Logout route (optional, Clerk handles session management)
-app.get('/api/auth/logout', (req, res) => {
-  res.json({ message: 'Logout handled by Clerk' });
+// No authentication or protection
+app.use('/admin', (req, res, next) => {
+  next(); // Allow all requests to /admin
 });
 
 // Routes

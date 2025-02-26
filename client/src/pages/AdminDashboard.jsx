@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { useUser, useClerk } from '@clerk/clerk-react'; // Import Clerk hooks
 
 export default function AdminDashboard() {
-  const { user, isSignedIn } = useUser(); // Get user and authentication state from Clerk
-  const { signOut } = useClerk(); // Clerk's signOut function
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -20,14 +17,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showUserModal, setShowUserModal] = useState(false);
-
-  // Check if the user is an admin
-  useEffect(() => {
-    if (isSignedIn && user.publicMetadata.role !== 'admin') {
-      signOut(); // Sign out non-admin users
-      window.location.href = '/'; // Redirect to home page
-    }
-  }, [isSignedIn, user, signOut]);
 
   // Fetch campaigns and users
   useEffect(() => {
@@ -47,14 +36,13 @@ export default function AdminDashboard() {
       }
     };
 
-    if (!isSignedIn) fetchData(); // Fetch data only if the user is signed in
-  }, [isSignedIn]);
-
-  if (!isSignedIn) {
-    return <div>Redirecting to login...</div>; // Clerk will handle the redirect
-  }
+    fetchData();
+  }, []);
 
   if (loading) return <div>Loading...</div>;
+
+  // Rest of your component remains the same
+  // ... (keep all the JSX and handlers)
 
   // Campaign form submission
   const handleCampaignSubmit = async (e) => {

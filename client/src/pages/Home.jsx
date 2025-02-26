@@ -1,7 +1,6 @@
 // client/src/pages/Home.jsx
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
-import { SignIn, SignedOut } from '@clerk/clerk-react';
 
 export default function Home() {
   const [campaigns, setCampaigns] = useState([]);
@@ -20,12 +19,6 @@ export default function Home() {
     return (
       <>
       <Navbar/>
-      <div>
-      <h1>Welcome to the Home Page</h1>
-      <SignedOut>
-        <SignIn />
-      </SignedOut>
-    </div>
       <div className="pt-20 min-h-screen">
         <div className="container">
           <h1 className="text-3xl font-bold text-gray-800 mb-8">Active Campaigns</h1>
