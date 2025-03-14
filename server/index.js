@@ -75,62 +75,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Server error', message: err.message });
 });
 
-// Function to create sample campaigns if none exist
-async function createSampleCampaignsIfNone() {
-  try {
-    // Only create sample campaigns in development environment
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Skipping sample campaigns creation in production');
-      return;
-    }
-
-    const Campaign = require('./models/Campaign');
-    const campaignsCount = await Campaign.countDocuments();
-    
-    if (campaignsCount === 0) {
-      console.log('No campaigns found in database, creating sample campaigns...');
-      
-      const sampleCampaigns = [
-        {
-          name: 'Amazon Gift Card Offer',
-          description: 'Complete a short survey and get an Amazon gift card worth ₹500',
-          trackingUrl: 'https://offers.example.com/amazon-gift',
-          shareUrl: 'https://taskwala.in/offers/amazon',
-          payoutRate: 150,
-          status: 'active',
-          details: '<p>Complete the following steps:</p><ol><li>Download the Amazon app</li><li>Sign up with a new account</li><li>Complete your profile</li></ol>'
-        },
-        {
-          name: 'Paytm Cash Bonus',
-          description: 'Sign up for Paytm and get instant ₹100 cash bonus',
-          trackingUrl: 'https://offers.example.com/paytm-bonus',
-          shareUrl: 'https://taskwala.in/offers/paytm',
-          payoutRate: 120,
-          status: 'active'
-        },
-        {
-          name: 'PhonePe Referral',
-          description: 'Refer a friend to PhonePe and earn ₹75 per successful referral',
-          trackingUrl: 'https://offers.example.com/phonepe-refer',
-          shareUrl: 'https://taskwala.in/offers/phonepe',
-          payoutRate: 75,
-          status: 'active'
-        }
-      ];
-      
-      await Campaign.insertMany(sampleCampaigns);
-      console.log('Successfully created sample campaigns');
-    }
-  } catch (error) {
-    console.error('Error creating sample campaigns:', error);
-  }
-}
-
 // Start server with MongoDB connection
 const startServer = async () => {
   try {
     await connectDB();
-    await createSampleCampaignsIfNone();
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
