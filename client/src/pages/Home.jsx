@@ -36,7 +36,7 @@ export default function Home() {
         setLoading(true);
         
         // Fetch campaigns
-        const campaignsResponse = await axios.get('http://localhost:5000/api/campaigns');
+        const campaignsResponse = await axios.get('https://campaign-pohg.onrender.com/api/campaigns');
         if (campaignsResponse.status !== 200) {
           throw new Error('Failed to fetch campaigns');
         }
@@ -45,7 +45,7 @@ export default function Home() {
         setCampaigns(activeCampaigns);
 
         // Fetch stats
-        const statsResponse = await axios.get('http://localhost:5000/api/stats');
+        const statsResponse = await axios.get('https://campaign-pohg.onrender.com/api/stats');
         if (statsResponse.status !== 200) {
           throw new Error('Failed to fetch stats');
         }

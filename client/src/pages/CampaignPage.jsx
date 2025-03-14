@@ -26,7 +26,7 @@ export default function CampaignPage() {
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/campaigns/${id}`);
+        const response = await fetch(`https://campaign-pohg.onrender.com/api/campaigns/${id}`);
 
         if (!response.ok) throw new Error('Campaign not found');
         const data = await response.json();
@@ -71,7 +71,7 @@ export default function CampaignPage() {
       }
 
       // Submit user details to backend
-      await axios.post('http://localhost:5000/api/users', {
+      await axios.post('https://campaign-pohg.onrender.com/api/users', {
         phone: formData.phone,
         upiId: formData.upiId,
         campaignId: id

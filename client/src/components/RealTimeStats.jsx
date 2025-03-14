@@ -1,7 +1,7 @@
 // client/src/components/RealTimeStats.jsx
 useEffect(() => {
 
-    const socket = io('http://localhost:5000');
+    const socket = io('https://campaign-pohg.onrender.com');
 
     socket.on('click', (data) => {
       setClicks(prev => prev + 1);

@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const connectDB = require('./config/db');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 // Import routes
@@ -16,7 +17,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: 'http://localhost:3000', // Frontend URL
+  origin: process.env.FRONTEND_URL || 'https://taskwalaoffer.netlify.app',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
@@ -71,19 +72,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Server error', message: err.message });
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-.then(() => {
-  console.log('Connected to MongoDB');
-  createSampleCampaignsIfNone();
-})
-.catch(err => {
-  console.error('MongoDB connection error:', err);
-  console.log('Connection URI:', process.env.MONGODB_URI ? 
-    `${process.env.MONGODB_URI.substring(0, 20)}...` : 'MONGODB_URI is not defined');
-  console.log('To fix this, ensure your IP address is whitelisted in MongoDB Atlas Network Access settings.');
-});
-
 // Function to create sample campaigns if none exist
 async function createSampleCampaignsIfNone() {
   try {
@@ -129,9 +117,20 @@ async function createSampleCampaignsIfNone() {
   }
 }
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Auth endpoint available at http://localhost:${PORT}/api/auth/admin/login`);
-});
+// Start server with MongoDB connection
+const startServer = async () => {
+  try {
+    await connectDB();
+    await createSampleCampaignsIfNone();
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Auth endpoint available at http://localhost:${PORT}/api/auth/admin/login`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();

@@ -128,7 +128,7 @@ export default function AdminDashboard() {
   // Add fetchStats function definition
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admin/stats');
+      const response = await axios.get('https://campaign-pohg.onrender.com/api/admin/stats');
       if (response.status === 200) {
         const { totalPayouts, activeUsers, avgPayout } = response.data;
         setStats({
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
       fetchHiqmobiData();
     }
   }, [activeTab]);
-  
+
   // Add hook to update total payout amount when payouts data changes
   useEffect(() => {
     console.log('Recalculating total payout amount from website payout data...');
@@ -214,19 +214,19 @@ export default function AdminDashboard() {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Fetch users
-      const usersResponse = await axios.get('http://localhost:5000/api/admin/users');
+      const usersResponse = await axios.get('https://campaign-pohg.onrender.com/api/admin/users');
       if (usersResponse.status === 200) {
         setUsers(usersResponse.data);
       }
       
       // Fetch campaigns
-      const campaignsResponse = await axios.get('http://localhost:5000/api/campaigns');
+      const campaignsResponse = await axios.get('https://campaign-pohg.onrender.com/api/campaigns');
       if (campaignsResponse.status === 200) {
         setCampaigns(campaignsResponse.data);
       }
       
       // Fetch payouts from MongoDB
-      const payoutsResponse = await axios.get('http://localhost:5000/api/admin/payouts');
+      const payoutsResponse = await axios.get('https://campaign-pohg.onrender.com/api/admin/payouts');
       if (payoutsResponse.status === 200) {
         setPayouts(payoutsResponse.data);
       }
@@ -254,30 +254,30 @@ export default function AdminDashboard() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('adminToken');
         if (!token) {
           setIsAuthenticated(false);
           setIsCheckingAuth(false);
           return;
         }
-
+      
         // Set the token in axios defaults
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
         // Verify the token with the server
-        const response = await axios.get('http://localhost:5000/api/admin/verify');
+        const response = await axios.get('https://campaign-pohg.onrender.com/api/admin/verify');
         if (response.status === 200) {
-          setIsAuthenticated(true);
+            setIsAuthenticated(true);
           // Fetch initial data
           await fetchData();
-        }
-      } catch (err) {
+          }
+        } catch (err) {
         console.error('Auth check failed:', err);
-        localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminToken');
         delete axios.defaults.headers.common['Authorization'];
-        setIsAuthenticated(false);
+          setIsAuthenticated(false);
       } finally {
-        setIsCheckingAuth(false);
+      setIsCheckingAuth(false);
       }
     };
 
@@ -326,7 +326,7 @@ export default function AdminDashboard() {
   // Fetch payout settings
   const fetchPayoutSettings = async () => {
     try {
-      const { data } = await axios.get('http://localhost:5000/api/settings');
+      const { data } = await axios.get('https://campaign-pohg.onrender.com/api/settings');
       setPayoutSettings(data.autoPayout);
     } catch (err) {
       console.error('Error fetching payout settings:', err);
@@ -336,7 +336,7 @@ export default function AdminDashboard() {
   // Update payout settings
   const updatePayoutSettings = async () => {
     try {
-      const { data } = await axios.patch('http://localhost:5000/api/settings/auto-payout', payoutSettings);
+      const { data } = await axios.patch('https://campaign-pohg.onrender.com/api/settings/auto-payout', payoutSettings);
       setPayoutSettings(data);
     setError('');
       alert('Auto-payout settings updated successfully!');
@@ -355,11 +355,11 @@ export default function AdminDashboard() {
       
       // Create a new payout with the token in headers
       const response = await axios.post(
-        'http://localhost:5000/api/payouts',
+        'https://campaign-pohg.onrender.com/api/payouts',
         {
-          userId,
-          amount,
-          paymentMethod: payoutMethod
+        userId,
+        amount,
+        paymentMethod: payoutMethod
         },
         {
           headers: {
@@ -393,13 +393,13 @@ export default function AdminDashboard() {
       return;
     }
 
-      await axios.post('http://localhost:5000/api/payouts/manual-process', manualPayoutData);
+      await axios.post('https://campaign-pohg.onrender.com/api/payouts/manual-process', manualPayoutData);
       
       setShowPayoutModal(false);
       setManualPayoutData({ payoutId: '', transactionId: '' });
       
       // Refresh payouts
-      const { data } = await axios.get('http://localhost:5000/api/payouts');
+      const { data } = await axios.get('https://campaign-pohg.onrender.com/api/payouts');
       setPayouts(data);
     } catch (err) {
       handleApiError(err, 'process payout');
@@ -412,10 +412,10 @@ export default function AdminDashboard() {
   const processAutomaticPayout = async (payoutId) => {
     try {
       setLoading(true);
-      await axios.post('http://localhost:5000/api/payouts/auto-process', { payoutId });
+      await axios.post('https://campaign-pohg.onrender.com/api/payouts/auto-process', { payoutId });
       
       // Refresh payouts
-      const { data } = await axios.get('http://localhost:5000/api/payouts');
+      const { data } = await axios.get('https://campaign-pohg.onrender.com/api/payouts');
       setPayouts(data);
     } catch (err) {
       handleApiError(err, 'automatic payout');
@@ -449,11 +449,11 @@ export default function AdminDashboard() {
       
       if (editMode) {
         // Update existing campaign
-        await axios.put(`http://localhost:5000/api/campaigns/${editId}`, campaignData);
+        await axios.put(`https://campaign-pohg.onrender.com/api/campaigns/${editId}`, campaignData);
         toast.success('Campaign updated successfully');
       } else {
         // Create new campaign
-        await axios.post('http://localhost:5000/api/campaigns', campaignData);
+        await axios.post('https://campaign-pohg.onrender.com/api/campaigns', campaignData);
         toast.success('Campaign created successfully');
       }
       
@@ -512,7 +512,7 @@ export default function AdminDashboard() {
   const deleteCampaign = async (id) => {
     if(window.confirm('Are you sure you want to delete this campaign? This action cannot be undone.')) {
       try {
-        await axios.delete(`http://localhost:5000/api/campaigns/${id}`);
+        await axios.delete(`https://campaign-pohg.onrender.com/api/campaigns/${id}`);
 
         setCampaigns(campaigns.filter(c => c._id !== id));
       } catch (err) {
@@ -524,7 +524,7 @@ export default function AdminDashboard() {
   // User payout status update
   const updatePayoutStatus = async (userId, status) => {
     try {
-      await axios.patch(`http://localhost:5000/api/users/${userId}/status`, { status });
+      await axios.patch(`https://campaign-pohg.onrender.com/api/users/${userId}/status`, { status });
 
       setUsers(users.map(u => u._id === userId ? { ...u, payoutStatus: status } : u));
     } catch (err) {
@@ -537,7 +537,7 @@ export default function AdminDashboard() {
     const deleteUser = async (userId) => {
     if (window.confirm('Permanently delete this user record?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/users/${userId}`);
+        await axios.delete(`https://campaign-pohg.onrender.com/api/users/${userId}`);
 
         setUsers(users.filter(u => u._id !== userId));
       } catch (err) {
@@ -587,7 +587,7 @@ export default function AdminDashboard() {
         return;
       }
       
-      const response = await fetch('http://localhost:5000/api/admin/bulk-payouts', {
+      const response = await fetch('https://campaign-pohg.onrender.com/api/admin/bulk-payouts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -635,7 +635,7 @@ export default function AdminDashboard() {
     try {
       setCashfreeConfigLoading(true);
       
-      const response = await fetch('http://localhost:5000/api/admin/cashfree-config', {
+      const response = await fetch('https://campaign-pohg.onrender.com/api/admin/cashfree-config', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -652,7 +652,7 @@ export default function AdminDashboard() {
       toast.success('Cashfree configuration updated successfully');
       
       // Update cashfree status
-      const statusResponse = await fetch('http://localhost:5000/api/admin/cashfree-status', {
+      const statusResponse = await fetch('https://campaign-pohg.onrender.com/api/admin/cashfree-status', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
@@ -793,7 +793,7 @@ export default function AdminDashboard() {
         
         // Try to create user with direct API endpoint
         try {
-          const createUserResponse = await fetch('http://localhost:5000/api/users', {
+          const createUserResponse = await fetch('https://campaign-pohg.onrender.com/api/users', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -823,7 +823,7 @@ export default function AdminDashboard() {
         // If user exists but UPI has changed, update it
         if (user.upiId !== upiId) {
           try {
-            await fetch(`http://localhost:5000/api/users/${user._id}`, {
+            await fetch(`https://campaign-pohg.onrender.com/api/users/${user._id}`, {
               method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',
@@ -847,7 +847,7 @@ export default function AdminDashboard() {
       try {
         // If new user, send an initial 1 rupee payout instantly
         if (isNewUser) {
-          const initialPayoutResponse = await fetch('http://localhost:5000/api/payouts', {
+          const initialPayoutResponse = await fetch('https://campaign-pohg.onrender.com/api/payouts', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -879,7 +879,7 @@ export default function AdminDashboard() {
         const remainingAmount = isNewUser ? totalPayoutAmount - 1 : totalPayoutAmount; // Subtract the initial 1 rupee if it was a new user
         
         // Create the main payout record (this will be processed manually later)
-        const mainPayoutResponse = await fetch('http://localhost:5000/api/payouts', {
+        const mainPayoutResponse = await fetch('https://campaign-pohg.onrender.com/api/payouts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -905,7 +905,7 @@ export default function AdminDashboard() {
         
         // Add conversion to the database if it doesn't exist yet
         try {
-          await fetch('http://localhost:5000/api/conversions', {
+          await fetch('https://campaign-pohg.onrender.com/api/conversions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -948,7 +948,7 @@ export default function AdminDashboard() {
       setProcessLoading(true);
       setSelectedPhone(phone);
       
-      const response = await fetch(`http://localhost:5000/api/admin/user/${phone}/processes`, {
+      const response = await fetch(`https://campaign-pohg.onrender.com/api/admin/user/${phone}/processes`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
@@ -970,7 +970,7 @@ export default function AdminDashboard() {
   // Add fetch function for HiQmobi data
   const fetchHiqmobiData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admin/hiqmobi/conversions', {
+      const response = await axios.get('https://campaign-pohg.onrender.com/api/admin/hiqmobi/conversions', {
         params: {
           page: 1,
           limit: 10
@@ -1035,7 +1035,7 @@ export default function AdminDashboard() {
 
       // Call the new endpoint to get conversions from MongoDB
       const response = await axios.get(
-        `http://localhost:5000/api/admin/db-conversions`,
+        `https://campaign-pohg.onrender.com/api/admin/db-conversions`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: {
@@ -1075,8 +1075,8 @@ export default function AdminDashboard() {
   const renderDashboardContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return (
-          <div>
+  return (
+      <div>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow-sm p-6">
@@ -1085,7 +1085,7 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500 mt-1">
                   {campaigns.filter(c => c.status === 'paused').length} paused
                 </p>
-              </div>
+    </div>
               
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h3 className="text-gray-500 text-sm font-medium">Total Users</h3>
@@ -1093,7 +1093,7 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500 mt-1">
                   {users.filter(u => u.payoutStatus === 'pending').length} pending payouts
                 </p>
-              </div>
+            </div>
               
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h3 className="text-gray-500 text-sm font-medium">Pending Payouts</h3>
@@ -1175,19 +1175,19 @@ export default function AdminDashboard() {
                           >
                             Edit
                           </button>
-                        </div>
+                  </div>
                       </li>
                     ))}
                     {campaigns.filter(c => c.status === 'paused').length === 0 && (
                       <li className="py-4 text-center text-gray-500">No paused campaigns</li>
                     )}
                   </ul>
-                </div>
+                            </div>
               </div>
             </div>
           </div>
         );
-        
+
       case 'campaigns':
         return (
           <div>
@@ -1599,7 +1599,7 @@ export default function AdminDashboard() {
                         toast.info(`Processing ${pendingPayouts.length} pending payouts...`);
                         for (const payout of pendingPayouts) {
                           try {
-                            await axios.post('http://localhost:5000/api/payouts/auto-process', {
+                            await axios.post('https://campaign-pohg.onrender.com/api/payouts/auto-process', {
                               payoutId: payout._id
                             });
                           } catch (error) {
@@ -1609,7 +1609,7 @@ export default function AdminDashboard() {
                         }
                         toast.success('Finished processing payouts');
                         fetchData(); // Refresh the data
-                      } else {
+                    } else {
                         toast.info('No pending payouts to process');
                       }
                     } catch (error) {
@@ -1647,95 +1647,95 @@ export default function AdminDashboard() {
                 </button>
               </div>
             ) : (
-              <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {payouts.map((payout, index) => (
+            <div className="bg-white shadow-md rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {payouts.map((payout, index) => (
                         <tr key={payout._id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mr-3">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mr-3">
                                 {payout.user?.phone?.charAt(0).toUpperCase() || 'U'}
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {payout.user?.phone || 'Unknown User'}
-                                </div>
-                                <div className="text-sm text-gray-500">ID: {payout.user?._id || 'N/A'}</div>
-                              </div>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                  {payout.user?.phone || 'Unknown User'}
+                              </div>
+                                <div className="text-sm text-gray-500">ID: {payout.user?._id || 'N/A'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">
                               <div className="flex items-center">
                                 <span>{payout.user?.phone || 'N/A'}</span>
                                 {payout.user?.phone && (
-                                  <button 
+                            <button 
                                     onClick={() => copyToClipboard(payout.user.phone)}
-                                    className="ml-2 text-gray-500 hover:text-blue-600"
-                                    title="Copy phone number"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                    </svg>
-                                  </button>
+                              className="ml-2 text-gray-500 hover:text-blue-600"
+                              title="Copy phone number"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                              </svg>
+                            </button>
                                 )}
-                              </div>
+                          </div>
                               <div className="flex items-center">
                                 <span>UPI: {payout.user?.upiId || 'N/A'}</span>
                                 {payout.user?.upiId && (
-                                  <button 
+                              <button 
                                     onClick={() => copyToClipboard(payout.user.upiId)}
-                                    className="ml-2 text-gray-500 hover:text-blue-600"
-                                    title="Copy UPI ID"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                    </svg>
-                                  </button>
-                                )}
+                                className="ml-2 text-gray-500 hover:text-blue-600"
+                                title="Copy UPI ID"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                              </button>
+                            )}
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">₹{payout.amount?.toFixed(2) || '0.00'}</div>
                             {payout.conversionSummary && (
                               <div className="text-xs text-gray-500">
                                 Offer: {payout.conversionSummary.offerName || 'N/A'}
                               </div>
                             )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              payout.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              payout.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            payout.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            payout.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
                               {payout.status?.charAt(0).toUpperCase() + (payout.status?.slice(1) || '')}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {payout.createdAt ? new Date(payout.createdAt).toLocaleDateString() : 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            {payout.status === 'pending' ? (
-                              <>
-                                <button
-                                  onClick={async () => {
-                                    try {
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          {payout.status === 'pending' ? (
+                            <>
+                              <button
+                                onClick={async () => {
+                                  try {
                                       toast.success(`Processing payout for ${payout.user?.phone || 'user'}`);
-                                      const response = await axios.post('http://localhost:5000/api/payouts/auto-process', {
+                                      const response = await axios.post('https://campaign-pohg.onrender.com/api/payouts/auto-process', {
                                         payoutId: payout._id
                                       });
                                       
@@ -1743,43 +1743,43 @@ export default function AdminDashboard() {
                                         toast.success('Payout processed successfully');
                                         fetchData(); // Refresh the data
                                       }
-                                    } catch (error) {
-                                      toast.error(`Failed to process payout: ${error.message}`);
-                                      console.error("Payout processing error:", error);
-                                    }
-                                  }}
-                                  className="text-green-600 hover:text-green-900 mr-3"
-                                >
-                                  Process
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    try {
+                                  } catch (error) {
+                                    toast.error(`Failed to process payout: ${error.message}`);
+                                    console.error("Payout processing error:", error);
+                                  }
+                                }}
+                                className="text-green-600 hover:text-green-900 mr-3"
+                              >
+                                Process
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
                                       toast.success(`Rejecting payout for ${payout.user?.phone || 'user'}`);
-                                      const response = await axios.put(`http://localhost:5000/api/payouts/${payout._id}/reject`, {
-                                        reason: 'Rejected by admin'
+                                      const response = await axios.put(`https://campaign-pohg.onrender.com/api/payouts/${payout._id}/reject`, {
+                                        reason: 'Rejected by admin' 
                                       });
                                       
                                       if (response.status === 200) {
                                         toast.success('Payout rejected successfully');
                                         fetchData(); // Refresh the data
                                       }
-                                    } catch (error) {
-                                      toast.error(`Failed to reject payout: ${error.message}`);
-                                      console.error("Payout rejection error:", error);
-                                    }
-                                  }}
-                                  className="text-red-600 hover:text-red-900"
-                                >
-                                  Reject
-                                </button>
-                              </>
-                            ) : (
-                              <span className="text-gray-500">
+                                  } catch (error) {
+                                    toast.error(`Failed to reject payout: ${error.message}`);
+                                    console.error("Payout rejection error:", error);
+                                  }
+                                }}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-gray-500">
                                 {payout.status === 'completed' ? 'Processed' : 
-                                 payout.status === 'rejected' ? 'Rejected' : payout.status}
-                              </span>
-                            )}
+                               payout.status === 'rejected' ? 'Rejected' : payout.status}
+                            </span>
+                          )}
                             <button 
                               onClick={() => {
                                 // Show payout details in a modal or new page
@@ -1787,15 +1787,15 @@ export default function AdminDashboard() {
                               }}
                               className="text-blue-600 hover:text-blue-900 ml-3"
                             >
-                              Details
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+            </div>
             )}
           </div>
         );

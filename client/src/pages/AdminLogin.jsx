@@ -21,7 +21,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
       setLoading(true);
       
       const response = await axios.post(
-        'http://localhost:5000/api/admin/login', 
+        'https://campaign-pohg.onrender.com/api/admin/login', 
         { username, password }
       );
       
