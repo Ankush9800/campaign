@@ -1,37 +1,52 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const mongoose = require('mongoose');
-const Admin = require('./models/Admin');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
+const Admin = require('./models/Admin');
 
-// Connect to MongoDB Atlas
+// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 30000, // 30 seconds timeout
 })
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
-// Create admin user
-const createAdmin = async () => {
+// Default admin credentials
+const createDefaultAdmin = async () => {
   try {
+    // Check if admin already exists
     const adminExists = await Admin.findOne({ username: 'admin' });
-
-    if (!adminExists) {
-      const admin = new Admin({
-        username: 'admin',
-        password: 'Ankush9413@', // Change this to a strong password
-      });
-      await admin.save();
-      console.log('Admin created');
-    } else {
-      console.log('Admin already exists');
+    
+    if (adminExists) {
+      console.log('Admin user already exists.');
+      process.exit(0);
     }
-  } catch (err) {
-    console.error('Error creating admin:', err);
+    
+    // Create new admin
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('admin123', salt);
+    
+    const admin = new Admin({
+      username: 'admin',
+      password: hashedPassword,
+      name: 'Administrator'
+    });
+    
+    await admin.save();
+    console.log('Admin user created successfully!');
+    console.log('Username: admin');
+    console.log('Password: admin123');
+    console.log('Please change the default password after first login');
+  } catch (error) {
+    console.error('Error creating admin:', error);
   } finally {
-    mongoose.connection.close(); // Close the connection
+    mongoose.disconnect();
   }
 };
 
-createAdmin();
+// Run the function
+createDefaultAdmin();

@@ -4,13 +4,26 @@ const Campaign = require('../models/Campaign');
 const authController = require('../controllers/authController'); // Import authController
 
 // Get all campaigns
-router.get('/', async (req, res) => {
-  try {
-    const campaigns = await Campaign.find();
-    res.json(campaigns);
-  } catch (err) {
-    res.status(500).json({ message: 'Server Error' });
-  }
+router.get('/', (req, res) => {
+  // Return mock campaigns data
+  res.json([
+    {
+      _id: '1',
+      name: 'Test Campaign 1',
+      description: 'This is a test campaign',
+      trackingUrl: 'https://example.com/campaign1',
+      payoutRate: 100,
+      status: 'active'
+    },
+    {
+      _id: '2',
+      name: 'Test Campaign 2',
+      description: 'This is another test campaign',
+      trackingUrl: 'https://example.com/campaign2',
+      payoutRate: 150,
+      status: 'paused'
+    }
+  ]);
 });
 
 // Create campaign (admin-only)

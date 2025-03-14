@@ -1,7 +1,7 @@
 // client/src/components/RealTimeStats.jsx
 useEffect(() => {
 
-    const socket = io('https://taskwala-backend.onrender.com');
+    const socket = io('http://localhost:5000');
 
     socket.on('click', (data) => {
       setClicks(prev => prev + 1);
