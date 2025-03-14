@@ -17,7 +17,10 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://taskwalaoffer.netlify.app',
+  origin: [
+    process.env.FRONTEND_URL || 'https://taskwalaoffer.netlify.app',
+    'http://localhost:3000'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
@@ -75,6 +78,12 @@ app.use((err, req, res, next) => {
 // Function to create sample campaigns if none exist
 async function createSampleCampaignsIfNone() {
   try {
+    // Only create sample campaigns in development environment
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Skipping sample campaigns creation in production');
+      return;
+    }
+
     const Campaign = require('./models/Campaign');
     const campaignsCount = await Campaign.countDocuments();
     
