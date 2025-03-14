@@ -13,7 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/admin" element={<AdminDashboard />} /> {/* No protection */}
-          <Route path="/campaigns/:id" element={<CampaignPage />} />
+          <Route path="/campaigns/:slug" element={<CampaignPage />} />
           <Route path="/campaign-paused" element={<CampaignPaused />} />
         </Routes>
       </div>

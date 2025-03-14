@@ -447,8 +447,18 @@ export default function AdminDashboard() {
         step => step.title.trim() !== '' || step.description.trim() !== ''
       );
       
+      // Ensure required fields are present
+      if (!campaignData.offerId) {
+        campaignData.offerId = `${campaignData.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+      }
+      
+      if (!campaignData.payout) {
+        campaignData.payout = parseFloat(campaignData.payoutRate);
+      }
+      
       if (editMode) {
         // Update existing campaign
+        console.log('Updating campaign with data:', campaignData);
         await axios.put(`https://campaign-pohg.onrender.com/api/campaigns/${editId}`, campaignData);
         toast.success('Campaign updated successfully');
       } else {
@@ -496,11 +506,14 @@ export default function AdminDashboard() {
       description: campaign.description || '',
       trackingUrl: campaign.trackingUrl,
       shareUrl: campaign.shareUrl || '',
-      imageUrl: campaign.imageUrl || '', // Add image URL field
+      imageUrl: campaign.imageUrl || '', 
       payoutRate: campaign.payoutRate,
       status: campaign.status,
       details: campaign.details || '',
-      howItWorks: campaign.howItWorks || defaultHowItWorks
+      howItWorks: campaign.howItWorks || defaultHowItWorks,
+      // Add missing required fields
+      offerId: campaign.offerId || `${campaign.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+      payout: campaign.payout || campaign.payoutRate
     });
     
     // Scroll to the form
@@ -559,6 +572,8 @@ export default function AdminDashboard() {
       payoutRate: '',
       status: 'active',
       details: '',
+      offerId: '',
+      payout: '',
       howItWorks: [
         { title: 'Enter your details', description: 'Fill in your mobile number and UPI ID' },
         { title: 'Complete offer requirements', description: 'Follow the instructions on the next page' },
@@ -990,8 +1005,8 @@ export default function AdminDashboard() {
 
   // Share campaign function
   const shareCampaign = (campaign) => {
-    // Create campaign-specific shareable URL
-    const campaignURL = `${window.location.origin}/campaigns/${campaign._id}`;
+    // Create campaign-specific shareable URL using slug if available, otherwise fall back to ID
+    const campaignURL = `${window.location.origin}/campaigns/${campaign.slug || campaign._id}`;
     
     if (navigator.share) {
       navigator.share({
@@ -1222,6 +1237,33 @@ export default function AdminDashboard() {
                       step="0.01"
                     />
                   </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Offer ID</label>
+                <input
+                  type="text"
+                  name="offerId"
+                  value={formData.offerId || ''}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="Will be auto-generated if empty"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payout Amount (₹)</label>
+                <input
+                  type="number"
+                  name="payout"
+                  value={formData.payout || ''}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  placeholder="Defaults to Payout Rate if empty"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
             </div>
 
             <div>

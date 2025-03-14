@@ -11,7 +11,7 @@ const toast = {
 };
 
 export default function CampaignPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -26,7 +26,7 @@ export default function CampaignPage() {
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
-        const response = await fetch(`https://campaign-pohg.onrender.com/api/campaigns/${id}`);
+        const response = await fetch(`https://campaign-pohg.onrender.com/api/campaigns/${slug}`);
 
         if (!response.ok) throw new Error('Campaign not found');
         const data = await response.json();
@@ -41,7 +41,7 @@ export default function CampaignPage() {
     };
     
     fetchCampaign();
-  }, [id]);
+  }, [slug]);
 
   // If campaign is paused, redirect to CampaignPaused page
   if (campaign && campaign.status === 'paused') {
@@ -74,7 +74,7 @@ export default function CampaignPage() {
       await axios.post('https://campaign-pohg.onrender.com/api/users', {
         phone: formData.phone,
         upiId: formData.upiId,
-        campaignId: id
+        campaignId: slug
       });
 
       // Mark as successful submission
@@ -103,8 +103,8 @@ export default function CampaignPage() {
   const shareCampaign = () => {
     if (!campaign) return;
     
-    // Create campaign-specific shareable URL
-    const campaignURL = `${window.location.origin}/campaigns/${campaign._id}`;
+    // Create campaign-specific shareable URL using slug if available
+    const campaignURL = `${window.location.origin}/campaigns/${campaign.slug || campaign._id}`;
     
     if (navigator.share) {
       navigator.share({
