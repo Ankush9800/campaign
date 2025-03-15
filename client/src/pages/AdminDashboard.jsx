@@ -1318,31 +1318,85 @@ export default function AdminDashboard() {
               </select>
             </div>
 
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                  <h3 className="text-blue-700 font-medium mb-2">Campaign Image</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Image URL</label>
+                    <input
+                      type="url"
+                      name="imageUrl"
+                      value={formData.imageUrl || ''}
+                      onChange={handleInputChange}
+                      className="w-full p-2 border border-gray-300 rounded"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                    <p className="text-xs text-gray-500 mt-1 mb-2">
+                      URL to an image that will be displayed on the campaign page. Recommended size: 300x300 pixels.
+                    </p>
+                    
+                    <div className="mt-2 mb-2 text-xs text-gray-600">
+                      <details>
+                        <summary className="font-medium cursor-pointer">Sample Image URLs (Click to expand)</summary>
+                        <div className="mt-2 space-y-2 pl-2 border-l-2 border-gray-200">
+                          <div>
+                            <div className="font-medium">Banking Offers:</div>
+                            <div>IndusInd Bank: https://i.imgur.com/k9hDu7f.png</div>
+                            <div>ICICI Bank: https://i.imgur.com/vLweYHx.png</div>
+                            <div>HDFC Bank: https://i.imgur.com/DObgXdx.png</div>
+                          </div>
+                          <div>
+                            <div className="font-medium">Shopping Offers:</div>
+                            <div>Amazon: https://i.imgur.com/RTlBgNL.png</div>
+                            <div>Flipkart: https://i.imgur.com/FgSS2AO.png</div>
+                          </div>
+                          <div>
+                            <div className="font-medium">App Installs:</div>
+                            <div>General App: https://i.imgur.com/BDRe8IW.png</div>
+                          </div>
+                        </div>
+                      </details>
+                    </div>
+                    
+                    {formData.imageUrl ? (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium mb-1">Image Preview:</p>
+                        <div className="border border-gray-200 rounded overflow-hidden w-32 h-32">
+                          <img 
+                            src={formData.imageUrl} 
+                            alt="Campaign Preview" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name || 'Campaign')}&background=0D8ABC&color=fff&size=300`;
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium mb-1">Default Image (if no URL provided):</p>
+                        <div className="border border-gray-200 rounded overflow-hidden w-32 h-32">
+                          <img 
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name || 'Campaign')}&background=0D8ABC&color=fff&size=300`}
+                            alt="Default Campaign" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Details (HTML)</label>
                   <textarea
                     name="details"
-                    value={formData.details}
+                    value={formData.details || ''}
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
                     rows="3"
                     placeholder="Optional HTML content for additional campaign details"
                   ></textarea>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Image URL</label>
-                  <input
-                    type="url"
-                    name="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="https://example.com/image.jpg"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    URL to an image that will be displayed on the campaign page.
-                  </p>
                 </div>
 
                 {/* How It Works Section */}
@@ -1423,8 +1477,8 @@ export default function AdminDashboard() {
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
+                  <thead className="bg-gray-50">
+                    <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
@@ -1434,77 +1488,122 @@ export default function AdminDashboard() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
+                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Image
+                      </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Payout
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
-                </tr>
-              </thead>
+                    </tr>
+                  </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                {campaigns.map(campaign => (
+                    {campaigns.map(campaign => (
                       <tr key={campaign._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900">{campaign.name}</div>
                           <div className="text-xs text-gray-500 truncate max-w-xs mt-1">
                             {campaign.trackingUrl}
                           </div>
-                    </td>
-                    <td className="px-6 py-4">
+                        </td>
+                        <td className="px-6 py-4">
                           <div className="text-sm text-gray-500 truncate max-w-xs">
                             {campaign.description || 'No description'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        campaign.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {campaign.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right text-blue-600 font-medium">
-                      ₹{campaign.payoutRate}
-                    </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex space-x-3 justify-end">
+                            campaign.status === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {campaign.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {campaign.imageUrl ? (
+                            <div className="mx-auto w-10 h-10 rounded-full overflow-hidden shadow-sm border border-gray-200">
+                              <img 
+                                src={campaign.imageUrl} 
+                                alt={campaign.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(campaign.name)}&background=0D8ABC&color=fff&size=300`;
+                                }}
+                              />
+                            </div>
+                          ) : (
                             <button
-                              onClick={() => shareCampaign(campaign)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="Share Campaign"
+                              onClick={() => {
+                                // For IndusInd Bank campaign
+                                if (campaign.name.includes('IndusInd')) {
+                                  updateCampaignImage(campaign._id, 'https://i.imgur.com/k9hDu7f.png');
+                                } else {
+                                  // For other campaigns, open edit form
+                                  setFormData({...campaign});
+                                  setActiveTab('campaigns');
+                                }
+                              }}
+                              className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-50 rounded"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                              </svg>
+                              Add Image
                             </button>
-                      <button
-                        onClick={() => editCampaign(campaign)}
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="text-sm font-medium text-gray-900">₹{campaign.payoutRate}</div>
+                        </td>
+                        <td className="px-6 py-4 text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => {
+                                setFormData({...campaign});
+                                setActiveTab('campaigns');
+                              }}
                               className="text-blue-600 hover:text-blue-900"
                               title="Edit Campaign"
-                      >
+                            >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                               </svg>
-                      </button>
-                      <button
-                        onClick={() => deleteCampaign(campaign._id)}
+                            </button>
+                            <button
+                              onClick={() => handleCampaignStatusToggle(campaign._id, campaign.status === 'active' ? 'inactive' : 'active')}
+                              className={`${
+                                campaign.status === 'active' ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'
+                              }`}
+                              title={campaign.status === 'active' ? 'Pause Campaign' : 'Activate Campaign'}
+                            >
+                              {campaign.status === 'active' ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => deleteCampaign(campaign._id)}
                               className="text-red-600 hover:text-red-900"
                               title="Delete Campaign"
-                      >
+                            >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                               </svg>
-                      </button>
+                            </button>
                           </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         );
         
@@ -2260,6 +2359,100 @@ export default function AdminDashboard() {
     navigator.clipboard.writeText(text)
       .then(() => toast.success('Copied to clipboard!'))
       .catch(() => toast.error('Failed to copy'));
+  };
+
+  // Update a campaign's image URL
+  const updateCampaignImage = async (campaignId, imageUrl) => {
+    try {
+      setLoading(true);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+      
+      const response = await axios.put(
+        `https://campaign-pohg.onrender.com/api/campaigns/${campaignId}`,
+        { imageUrl },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        toast.success('Campaign image updated successfully');
+        // Refresh campaigns list
+        fetchCampaigns();
+      }
+    } catch (error) {
+      console.error('Error updating campaign image:', error);
+      toast.error(error.response?.data?.message || 'Failed to update campaign image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to fetch only campaigns
+  const fetchCampaigns = async () => {
+    try {
+      setLoading(true);
+      
+      // Check if token exists before making requests
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Ensure axios headers are set
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Fetch campaigns
+      const campaignsResponse = await axios.get('https://campaign-pohg.onrender.com/api/campaigns');
+      if (campaignsResponse.status === 200) {
+        setCampaigns(campaignsResponse.data);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+      handleApiError(error, 'fetch campaigns');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Toggle campaign status (active/inactive)
+  const handleCampaignStatusToggle = async (campaignId, newStatus) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+      
+      const response = await axios.put(
+        `https://campaign-pohg.onrender.com/api/campaigns/${campaignId}`,
+        { status: newStatus },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        toast.success(`Campaign ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+        // Update campaigns in state
+        setCampaigns(campaigns.map(c => 
+          c._id === campaignId ? { ...c, status: newStatus } : c
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating campaign status:', error);
+      handleApiError(error, 'update campaign status');
+    }
   };
 
   return (
