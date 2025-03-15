@@ -13,6 +13,7 @@ const usersRouter = require('./routes/users');
 const payoutRoutes = require('./routes/payouts');
 const settingsRoutes = require('./routes/settings');
 const statsRoutes = require('./routes/stats');
+const referralRoutes = require('./routes/referrals');
 
 const app = express();
 
@@ -80,6 +81,7 @@ app.use('/api/payouts', payoutRoutes);
 app.use('/api/users', usersRouter);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/referrals', referralRoutes);
 
 // Admin routes (including login)
 app.use('/api/admin', adminRoutes);

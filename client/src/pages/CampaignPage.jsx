@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 // import { toast } from 'react-hot-toast';
@@ -12,6 +12,7 @@ const toast = {
 
 export default function CampaignPage() {
   const { slug } = useParams();
+  const location = useLocation();
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,6 +23,38 @@ export default function CampaignPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [referralCode, setReferralCode] = useState(null);
+
+  // Extract referral code from URL if present
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const ref = queryParams.get('ref');
+    if (ref) {
+      console.log('Referral code detected:', ref);
+      setReferralCode(ref);
+      
+      // Store referral code in session storage to use later
+      sessionStorage.setItem('referralCode', ref);
+      
+      // Track the referral click
+      trackReferralClick(ref);
+    }
+  }, [location.search]);
+  
+  // Track referral click
+  const trackReferralClick = async (code) => {
+    try {
+      // Get a user identifier - could be from localStorage if user has used the site before
+      const userId = localStorage.getItem('userId') || '';
+      
+      await axios.get(`https://campaign-pohg.onrender.com/api/referrals/track/${code}`, {
+        params: { userId }
+      });
+      console.log('Referral click tracked');
+    } catch (err) {
+      console.error('Error tracking referral click:', err);
+    }
+  };
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -70,11 +103,18 @@ export default function CampaignPage() {
         throw new Error('Please enter a valid UPI ID (e.g., example@upi)');
       }
 
+      // Get referral code from state or session storage
+      const refCode = referralCode || sessionStorage.getItem('referralCode');
+      
+      // Store user ID in localStorage for future visits
+      localStorage.setItem('userId', formData.phone);
+
       // Submit user details to backend
       await axios.post('https://campaign-pohg.onrender.com/api/users', {
         phone: formData.phone,
         upiId: formData.upiId,
-        campaignId: slug
+        campaignId: slug,
+        referralCode: refCode // Include referral code if present
       });
 
       // Mark as successful submission
@@ -86,6 +126,21 @@ export default function CampaignPage() {
 
       // Build the affiliate link
       const affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}`;
+      
+      // If there was a referral, send a click update
+      if (refCode) {
+        try {
+          await axios.post('https://campaign-pohg.onrender.com/api/referrals/conversion', {
+            referralCode: refCode,
+            userId: formData.phone,
+            conversionId: `${campaign._id}-${Date.now()}` // Use actual campaign ID
+          });
+          console.log('Referral conversion tracked');
+        } catch (refErr) {
+          console.error('Error tracking referral conversion:', refErr);
+          // Don't block the main flow if referral tracking fails
+        }
+      }
 
       // Set a short timeout before redirecting to allow user to see success message
       setTimeout(() => {
@@ -100,29 +155,39 @@ export default function CampaignPage() {
     }
   };
 
+  // Function to share the campaign
   const shareCampaign = () => {
-    if (!campaign) return;
-    
-    // Create campaign-specific shareable URL using slug if available
-    const campaignURL = `${window.location.origin}/campaigns/${campaign.slug || campaign._id}`;
+    const shareUrl = campaign.shareUrl || window.location.href;
     
     if (navigator.share) {
       navigator.share({
         title: campaign.name,
-        text: `Check out this offer: ${campaign.name}`,
-        url: campaignURL,
+        text: campaign.description || `Check out this campaign: ${campaign.name}`,
+        url: shareUrl
       })
       .then(() => console.log('Shared successfully'))
-      .catch((error) => console.log('Share error:', error));
+      .catch((err) => console.error('Share error:', err));
     } else {
-      // Fallback for browsers that don't support navigator.share
-      navigator.clipboard.writeText(campaignURL)
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(shareUrl)
         .then(() => {
           toast.success('Link copied to clipboard!');
         })
-        .catch(() => {
+        .catch(err => {
+          console.error('Copy failed:', err);
           toast.error('Failed to copy link');
         });
+    }
+  };
+
+  // Function to navigate to referral page
+  const generateReferralLink = () => {
+    // Only navigate if the campaign has a referral program
+    if (campaign.referralAmount > 0) {
+      // Navigate to the referral page with campaign ID in the URL
+      window.location.href = `/refer?campaign=${campaign._id}`;
+    } else {
+      toast.error('This campaign does not have a referral program');
     }
   };
 
@@ -168,8 +233,8 @@ export default function CampaignPage() {
           </svg>
         </div>
 
-        {/* Share button */}
-        <div className="absolute top-4 right-4">
+        {/* Share buttons */}
+        <div className="absolute top-4 right-4 flex space-x-2">
           <button 
             onClick={shareCampaign} 
             className="bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30 transition-all"
@@ -179,6 +244,17 @@ export default function CampaignPage() {
               <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
             </svg>
           </button>
+          {campaign.referralAmount > 0 && (
+            <button 
+              onClick={generateReferralLink} 
+              className="bg-green-500 bg-opacity-90 p-2 rounded-full hover:bg-green-600 transition-all flex items-center"
+              title="Refer & Earn"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+              </svg>
+            </button>
+          )}
         </div>
         
         <div className="max-w-4xl mx-auto relative z-10">
@@ -411,6 +487,49 @@ export default function CampaignPage() {
             </div>
           </div>
         </div>
+        
+        {/* Referral Card */}
+        {campaign.referralAmount > 0 && (
+          <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Refer & Earn
+              </h2>
+              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                ₹{campaign.referralAmount} per referral
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mb-4">
+              <div className="flex items-start">
+                <div className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0 font-medium">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800 text-lg">Earn extra money by referring friends!</h3>
+                  <p className="text-gray-600 mt-1">
+                    Share your unique referral link with friends. When they complete this offer, you'll earn ₹{campaign.referralAmount} for each successful referral.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              onClick={generateReferralLink}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+              </svg>
+              Get My Referral Link
+            </button>
+          </div>
+        )}
         
         {/* Campaign Details */}
         {campaign.details && (

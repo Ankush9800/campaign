@@ -125,6 +125,12 @@ export default function AdminDashboard() {
   const [dbConversionStatus, setDbConversionStatus] = useState('all');
   const [dbConversionSearch, setDbConversionSearch] = useState('');
   
+  // Referral settings
+  const [referralSettings, setReferralSettings] = useState({
+    referralAmount: 10,
+    enabled: true
+  });
+
   // Add fetchStats function definition
   const fetchStats = async () => {
     try {
@@ -245,6 +251,63 @@ export default function AdminDashboard() {
       } else {
         setError('Failed to fetch data');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to fetch referral settings
+  const fetchReferralSettings = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      // We'll get this from the same endpoint that provides other settings
+      const response = await axios.get('https://campaign-pohg.onrender.com/api/settings', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data && response.data.referralAmount !== undefined) {
+        setReferralSettings({
+          ...referralSettings,
+          referralAmount: response.data.referralAmount
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching referral settings:', error);
+      handleApiError(error, 'fetch referral settings');
+    }
+  };
+
+  // Function to update referral amount
+  const updateReferralAmount = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+      
+      setLoading(true);
+      
+      const response = await axios.post(
+        'https://campaign-pohg.onrender.com/api/referrals/admin/settings',
+        { referralAmount: referralSettings.referralAmount },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        toast.success('Referral amount updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating referral amount:', error);
+      handleApiError(error, 'update referral amount');
     } finally {
       setLoading(false);
     }
@@ -589,6 +652,15 @@ export default function AdminDashboard() {
       ...prev,
       [name]: name === 'payoutRate' ? parseFloat(value) || '' : value
     }));
+  };
+
+  // Referral settings change handler
+  const handleReferralSettingsChange = (e) => {
+    const { name, value } = e.target;
+    setReferralSettings({
+      ...referralSettings,
+      [name]: name === 'referralAmount' ? parseFloat(value) || 0 : value
+    });
   };
 
   // Process payouts in bulk for selected users
@@ -1237,7 +1309,22 @@ export default function AdminDashboard() {
                       step="0.01"
                     />
                   </div>
-            </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Referral Amount (₹)</label>
+                    <input
+                      type="number"
+                      name="referralAmount"
+                      value={formData.referralAmount || 0}
+                      onChange={handleInputChange}
+                      className="w-full p-2 border border-gray-300 rounded"
+                      min="0"
+                      step="0.01"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Amount paid to referrers for each successful conversion (0 = no referral program)
+                    </p>
+                  </div>
+                </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -1492,7 +1579,10 @@ export default function AdminDashboard() {
                         Image
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Payout
+                        Payout Rate
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Referral Amount
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
@@ -1556,8 +1646,13 @@ export default function AdminDashboard() {
                         <td className="px-6 py-4 text-right">
                           <div className="text-sm font-medium text-gray-900">₹{campaign.payoutRate}</div>
                         </td>
-                        <td className="px-6 py-4 text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2">
+                        <td className="px-6 py-4 text-right">
+                          <div className="text-sm font-medium text-gray-900">
+                            {campaign.referralAmount > 0 ? `₹${campaign.referralAmount}` : '—'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          <div className="flex space-x-2">
                             <button
                               onClick={() => {
                                 setFormData({...campaign});
@@ -1594,6 +1689,15 @@ export default function AdminDashboard() {
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => shareCampaign(campaign)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                              title="Share Campaign"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                               </svg>
                             </button>
                           </div>
@@ -2312,6 +2416,134 @@ export default function AdminDashboard() {
             </div>
           </div>
         );
+      case 'referrals':
+        return (
+          <div className="p-4">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-2">Referral Program Management</h2>
+              <p className="text-gray-600 mb-4">
+                Manage your referral program settings and view referral statistics.
+              </p>
+            </div>
+            
+            {/* Referral Settings Section */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h3 className="text-lg font-medium mb-4">Referral Settings</h3>
+              
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Referral Reward Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={referralSettings.referralAmount || 0}
+                    onChange={(e) => handleReferralSettingsChange(e)}
+                    name="referralAmount"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter amount in ₹"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Amount users will receive for each successful referral
+                  </p>
+                </div>
+                
+                <div className="mt-6">
+                  <button
+                    onClick={updateReferralAmount}
+                    className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                      </span>
+                    ) : "Save Settings"}
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Referral Statistics */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h3 className="text-lg font-medium mb-4">Referral Statistics</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">Total Referrals</p>
+                  <p className="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">Successful Referrals</p>
+                  <p className="text-2xl font-bold text-green-600">0</p>
+                </div>
+                
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">Total Rewards Paid</p>
+                  <p className="text-2xl font-bold text-purple-600">₹0</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Referral Links Table */}
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-800">Recent Referrals</h3>
+                <button
+                  onClick={() => fetchReferralSettings()}
+                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Referrer</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Referred User</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reward</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                        No referral data available
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      case 'settings':
+        return (
+          <div className="p-4">
+            <h2 className="text-xl font-semibold mb-4">Settings</h2>
+            <p className="text-gray-600 mb-6">
+              Configure application settings and preferences.
+            </p>
+            
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-medium mb-4">General Settings</h3>
+              <p className="text-gray-500 mb-4">
+                More settings will be added in future updates.
+              </p>
+            </div>
+          </div>
+        );
     }
   };
 
@@ -2532,6 +2764,16 @@ export default function AdminDashboard() {
                     onClick={() => setActiveTab('hiqmobi')}
                   >
                     HiQmobi
+                  </button>
+                  <button 
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                      activeTab === 'referrals' 
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                    onClick={() => setActiveTab('referrals')}
+                  >
+                    Referrals
                   </button>
                   <button 
                     className={`border-b-2 py-4 px-1 text-sm font-medium ${
