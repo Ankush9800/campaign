@@ -26,6 +26,15 @@ router.post('/', authController.isAdmin, async (req, res) => {
         '-' + Math.random().toString(36).substring(2, 8);
     }
     
+    // Validate image URL if provided
+    if (req.body.imageUrl) {
+      try {
+        new URL(req.body.imageUrl);
+      } catch (err) {
+        return res.status(400).json({ message: 'Invalid image URL format' });
+      }
+    }
+    
     const campaign = new Campaign(req.body);
     await campaign.save();
     res.status(201).json(campaign);

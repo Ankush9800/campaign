@@ -357,9 +357,12 @@ export default function AdminDashboard() {
       const response = await axios.post(
         'https://campaign-pohg.onrender.com/api/payouts',
         {
-        userId,
-        amount,
-        paymentMethod: payoutMethod
+          userId,
+          amount,
+          paymentMethod: 'manual',
+          instantProcess: false,
+          source: 'admin_panel',
+          notes: 'Created from admin panel'
         },
         {
           headers: {
@@ -370,9 +373,7 @@ export default function AdminDashboard() {
       
       console.log('Payout created successfully:', response.data);
       setPayouts([...payouts, response.data]);
-      setShowPayoutModal(true);
-      setManualPayoutData({ payoutId: response.data._id, transactionId: '' });
-      toast.success('Payout created successfully');
+      toast.success('Payout record created successfully');
     } catch (err) {
       console.error('Error creating payout:', err);
       console.error('Error response:', err.response?.data);
@@ -425,6 +426,38 @@ export default function AdminDashboard() {
   };
 
   // Campaign form submission
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError('Campaign name is required');
+      return false;
+    }
+    if (isNaN(formData.payoutRate) || parseFloat(formData.payoutRate) <= 0) {
+      setError('Invalid payout rate');
+      return false;
+    }
+    if (!formData.trackingUrl.trim()) {
+      setError('Tracking URL is required');
+      return false;
+    }
+    // Validate URL format
+    try {
+      new URL(formData.trackingUrl);
+    } catch (err) {
+      setError('Invalid tracking URL format. Must start with http:// or https://');
+      return false;
+    }
+    // Validate image URL if provided
+    if (formData.imageUrl && formData.imageUrl.trim()) {
+      try {
+        new URL(formData.imageUrl);
+      } catch (err) {
+        setError('Invalid image URL format. Must start with http:// or https://');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleCampaignSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -432,37 +465,24 @@ export default function AdminDashboard() {
     setLoading(true);
     
     try {
-      const campaignData = { ...formData };
-      
-      // If no shareUrl is provided, use trackingUrl
-      if (!campaignData.shareUrl.trim()) {
-        campaignData.shareUrl = campaignData.trackingUrl;
-      }
-      
-      // Format the payoutRate as a number
-      campaignData.payoutRate = parseFloat(campaignData.payoutRate);
-      
-      // Filter out empty howItWorks steps
-      campaignData.howItWorks = campaignData.howItWorks.filter(
-        step => step.title.trim() !== '' || step.description.trim() !== ''
-      );
-      
-      // Ensure required fields are present
-      if (!campaignData.offerId) {
-        campaignData.offerId = `${campaignData.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
-      }
-      
-      if (!campaignData.payout) {
-        campaignData.payout = parseFloat(campaignData.payoutRate);
-      }
+      const campaignData = {
+        name: formData.name.trim(),
+        payoutRate: parseFloat(formData.payoutRate),
+        trackingUrl: formData.trackingUrl.trim(),
+        status: formData.status,
+        imageUrl: formData.imageUrl ? formData.imageUrl.trim() : '',
+        description: formData.description ? formData.description.trim() : '',
+        offerId: formData.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+        payout: parseFloat(formData.payoutRate),
+        shareUrl: formData.trackingUrl.trim(),
+        howItWorks: formData.howItWorks || [],
+        details: formData.details || ''
+      };
       
       if (editMode) {
-        // Update existing campaign
-        console.log('Updating campaign with data:', campaignData);
         await axios.put(`https://campaign-pohg.onrender.com/api/campaigns/${editId}`, campaignData);
         toast.success('Campaign updated successfully');
       } else {
-        // Create new campaign
         await axios.post('https://campaign-pohg.onrender.com/api/campaigns', campaignData);
         toast.success('Campaign created successfully');
       }
@@ -474,19 +494,6 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Form validation
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      setError('Campaign name is required');
-      return false;
-    }
-    if (isNaN(formData.payoutRate) || parseFloat(formData.payoutRate) <= 0) {
-      setError('Invalid payout rate');
-      return false;
-    }
-    return true;
   };
 
   // Edit campaign
@@ -1213,16 +1220,16 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-medium mb-4">{formData._id ? 'Edit Campaign' : 'Add New Campaign'}</h3>
           <form onSubmit={handleCampaignSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
                       className="w-full p-2 border border-gray-300 rounded"
-                required
-              />
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Payout Rate (₹)</label>
@@ -1237,97 +1244,36 @@ export default function AdminDashboard() {
                       step="0.01"
                     />
                   </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Offer ID</label>
-                <input
-                  type="text"
-                  name="offerId"
-                  value={formData.offerId || ''}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                  placeholder="Will be auto-generated if empty"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payout Amount (₹)</label>
-                <input
-                  type="number"
-                  name="payout"
-                  value={formData.payout || ''}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                  placeholder="Defaults to Payout Rate if empty"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-            </div>
-
-            <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded"
-                    rows="2"
-              ></textarea>
-            </div>
-
-            <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tracking URL</label>
-              <input
-                type="url"
-                name="trackingUrl"
-                value={formData.trackingUrl}
-                onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded"
-                required
-                    placeholder="https://example.com/track"
-              />
-                  <p className="text-xs text-gray-500 mt-1">
-                    The tracking URL where users will be redirected after form submission.
-                  </p>
-            </div>
-
-            <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Share URL (Optional)</label>
-              <input
-                    type="url"
-                    name="shareUrl"
-                    value={formData.shareUrl}
-                onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="Will use tracking URL if left empty"
-              />
-            </div>
-
-            <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded"
-              >
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-              </select>
-            </div>
+                </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Details (HTML)</label>
-                  <textarea
-                    name="details"
-                    value={formData.details}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tracking URL</label>
+                  <input
+                    type="url"
+                    name="trackingUrl"
+                    value={formData.trackingUrl}
                     onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
-                    rows="3"
-                    placeholder="Optional HTML content for additional campaign details"
-                  ></textarea>
+                    className="w-full p-2 border border-gray-300 rounded"
+                    required
+                    placeholder="https://example.com/track"
+                    pattern="https?://.+"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    The tracking URL where users will be redirected after form submission. Must start with http:// or https://
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
                 </div>
 
                 <div>
@@ -1339,10 +1285,22 @@ export default function AdminDashboard() {
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded"
                     placeholder="https://example.com/image.jpg"
+                    pattern="https?://.+"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    URL to an image that will be displayed on the campaign page.
+                    URL to an image that will be displayed on the campaign page. Must start with http:// or https://
                   </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    rows="2"
+                  ></textarea>
                 </div>
 
                 {/* How It Works Section */}
@@ -1479,24 +1437,60 @@ export default function AdminDashboard() {
                                 <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                               </svg>
                             </button>
-                      <button
-                        onClick={() => editCampaign(campaign)}
+                            <button
+                              onClick={() => {
+                                const newStatus = campaign.status === 'active' ? 'inactive' : 'active';
+                                axios.put(`https://campaign-pohg.onrender.com/api/campaigns/${campaign._id}`, {
+                                  name: campaign.name,
+                                  offerId: campaign.offerId,
+                                  payout: campaign.payout,
+                                  trackingUrl: campaign.trackingUrl,
+                                  payoutRate: campaign.payoutRate,
+                                  status: newStatus,
+                                  imageUrl: campaign.imageUrl || '',
+                                  description: campaign.description || '',
+                                  shareUrl: campaign.shareUrl || campaign.trackingUrl,
+                                  howItWorks: campaign.howItWorks || []
+                                })
+                                .then(() => {
+                                  fetchData();
+                                  toast.success(`Campaign ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+                                })
+                                .catch(err => {
+                                  handleApiError(err, 'update campaign status');
+                                });
+                              }}
+                              className={`${campaign.status === 'active' ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'}`}
+                              title={campaign.status === 'active' ? 'Deactivate Campaign' : 'Activate Campaign'}
+                            >
+                              {campaign.status === 'active' ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => editCampaign(campaign)}
                               className="text-blue-600 hover:text-blue-900"
                               title="Edit Campaign"
-                      >
+                            >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                               </svg>
-                      </button>
-                      <button
-                        onClick={() => deleteCampaign(campaign._id)}
+                            </button>
+                            <button
+                              onClick={() => deleteCampaign(campaign._id)}
                               className="text-red-600 hover:text-red-900"
                               title="Delete Campaign"
-                      >
+                            >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                               </svg>
-                      </button>
+                            </button>
                           </div>
                     </td>
                   </tr>
@@ -2097,33 +2091,39 @@ export default function AdminDashboard() {
                             <td className="px-4 py-2 whitespace-nowrap font-mono text-sm">
                               {item.clickid || 'N/A'}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap font-medium">
+                            <td className="px-4 py-2 whitespace-nowrap">
                               {item.p1 ? (
-                                <div className="flex items-center">
-                                  <span>{item.p1}</span>
-                                  <button 
-                                    onClick={() => copyToClipboard(item.p1)}
-                                    className="ml-2 text-gray-500 hover:text-blue-600"
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium">{item.p1}</span>
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(item.p1);
+                                      toast.success('Phone number copied!');
+                                    }}
+                                    className="text-gray-400 hover:text-blue-600"
                                     title="Copy phone number"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
                                   </button>
                                 </div>
                               ) : 'N/A'}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap font-mono text-sm">
+                            <td className="px-4 py-2 whitespace-nowrap">
                               {item.p2 ? (
-                                <div className="flex items-center">
-                                  <span>{item.p2}</span>
-                                  <button 
-                                    onClick={() => copyToClipboard(item.p2)}
-                                    className="ml-2 text-gray-500 hover:text-blue-600"
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium">{item.p2}</span>
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(item.p2);
+                                      toast.success('UPI ID copied!');
+                                    }}
+                                    className="text-gray-400 hover:text-blue-600"
                                     title="Copy UPI ID"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
                                   </button>
                                 </div>
