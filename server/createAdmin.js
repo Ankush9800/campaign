@@ -28,7 +28,7 @@ const createDefaultAdmin = async () => {
     
     // Create new admin
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('Sampan9413@', salt);
+    const hashedPassword = await bcrypt.hash('admin123', salt);
     
     const admin = new Admin({
       username: 'admin',
@@ -39,7 +39,7 @@ const createDefaultAdmin = async () => {
     await admin.save();
     console.log('Admin user created successfully!');
     console.log('Username: admin');
-    console.log('Password: Sampan9413@');
+    console.log('Password: admin123');
     console.log('Please change the default password after first login');
   } catch (error) {
     console.error('Error creating admin:', error);

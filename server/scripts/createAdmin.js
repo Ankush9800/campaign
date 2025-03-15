@@ -16,7 +16,7 @@ const createAdminUser = async () => {
         // Create new admin user
         const admin = new Admin({
             username: 'admin',
-            password: 'Sampan9413@', // This will be hashed by the pre-save middleware
+            password: 'admin123', // This will be hashed by the pre-save middleware
             isAdmin: true
         });
 

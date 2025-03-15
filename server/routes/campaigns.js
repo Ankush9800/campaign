@@ -98,12 +98,7 @@ router.get('/:identifier', async (req, res) => {
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
     }
-    
-    // Add a status flag for inactive/paused campaigns
-    const response = campaign.toObject();
-    response.isActive = campaign.status === 'active';
-    
-    res.json(response);
+    res.json(campaign);
   } catch (err) {
     res.status(500).json({ message: 'Server Error' });
   }

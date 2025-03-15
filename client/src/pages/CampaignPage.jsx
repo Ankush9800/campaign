@@ -43,8 +43,8 @@ export default function CampaignPage() {
     fetchCampaign();
   }, [slug]);
 
-  // If campaign is not active (paused or inactive), redirect to CampaignPaused page
-  if (campaign && !campaign.isActive) {
+  // If campaign is paused, redirect to CampaignPaused page
+  if (campaign && campaign.status === 'paused') {
     return <Navigate to="/campaign-paused" replace />;
   }
 
@@ -127,8 +127,7 @@ export default function CampaignPage() {
   };
 
   // Default campaign image if none provided
-  const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(campaign?.name || 'Campaign')}&background=0D8ABC&color=fff&size=300`;
-  const campaignImage = campaign?.imageUrl || defaultImageUrl;
+  const campaignImage = campaign?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(campaign?.name || 'Campaign')}&background=0D8ABC&color=fff&size=300`;
 
   if (loading) {
     return (
@@ -189,9 +188,8 @@ export default function CampaignPage() {
                 alt={campaign.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  console.log("Image failed to load, using fallback");
                   e.target.onerror = null;
-                  e.target.src = defaultImageUrl;
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(campaign.name)}&background=0D8ABC&color=fff&size=300`;
                 }}
               />
             </div>
@@ -239,7 +237,7 @@ export default function CampaignPage() {
       </div>
       
       {/* Main Content */}
-      <div className="max-w-lg mx-auto px-4">
+      <div className="max-w-lg mx-auto px-4 pt-8">
         {/* Instructions Card */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
