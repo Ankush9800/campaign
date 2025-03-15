@@ -133,7 +133,8 @@ export default function CampaignPage() {
           await axios.post('https://campaign-pohg.onrender.com/api/referrals/conversion', {
             referralCode: refCode,
             userId: formData.phone,
-            conversionId: `${campaign._id}-${Date.now()}` // Use actual campaign ID
+            conversionId: `${campaign._id}-${Date.now()}`, // Use actual campaign ID
+            upiId: formData.upiId // Include UPI ID for payment
           });
           console.log('Referral conversion tracked');
         } catch (refErr) {

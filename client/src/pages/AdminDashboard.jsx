@@ -130,7 +130,7 @@ export default function AdminDashboard() {
     referralAmount: 10,
     enabled: true
   });
-
+  
   // Add fetchStats function definition
   const fetchStats = async () => {
     try {
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
         delete axios.defaults.headers.common['Authorization'];
         setIsAuthenticated(false);
         toast.error('Session expired. Please login again.');
-      } else {
+              } else {
         setError('Failed to fetch data');
       }
     } finally {
@@ -1407,16 +1407,16 @@ export default function AdminDashboard() {
 
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
                   <h3 className="text-blue-700 font-medium mb-2">Campaign Image</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Image URL</label>
-                    <input
-                      type="url"
-                      name="imageUrl"
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Image URL</label>
+                  <input
+                    type="url"
+                    name="imageUrl"
                       value={formData.imageUrl || ''}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded"
-                      placeholder="https://example.com/image.jpg"
-                    />
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholder="https://example.com/image.jpg"
+                  />
                     <p className="text-xs text-gray-500 mt-1 mb-2">
                       URL to an image that will be displayed on the campaign page. Recommended size: 300x300 pixels.
                     </p>
@@ -1564,8 +1564,8 @@ export default function AdminDashboard() {
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
+              <thead className="bg-gray-50">
+                <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
@@ -1587,31 +1587,31 @@ export default function AdminDashboard() {
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
-                    </tr>
-                  </thead>
+                </tr>
+              </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {campaigns.map(campaign => (
+                {campaigns.map(campaign => (
                       <tr key={campaign._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900">{campaign.name}</div>
                           <div className="text-xs text-gray-500 truncate max-w-xs mt-1">
                             {campaign.trackingUrl}
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
+                    </td>
+                    <td className="px-6 py-4">
                           <div className="text-sm text-gray-500 truncate max-w-xs">
                             {campaign.description || 'No description'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            campaign.status === 'active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {campaign.status}
-                          </span>
-                        </td>
+                        campaign.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {campaign.status}
+                      </span>
+                    </td>
                         <td className="px-6 py-4 text-center">
                           {campaign.imageUrl ? (
                             <div className="mx-auto w-10 h-10 rounded-full overflow-hidden shadow-sm border border-gray-200">
@@ -1642,7 +1642,7 @@ export default function AdminDashboard() {
                               Add Image
                             </button>
                           )}
-                        </td>
+                    </td>
                         <td className="px-6 py-4 text-right">
                           <div className="text-sm font-medium text-gray-900">₹{campaign.payoutRate}</div>
                         </td>
@@ -1665,7 +1665,7 @@ export default function AdminDashboard() {
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                               </svg>
                             </button>
-                            <button
+                      <button
                               onClick={() => handleCampaignStatusToggle(campaign._id, campaign.status === 'active' ? 'inactive' : 'active')}
                               className={`${
                                 campaign.status === 'active' ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'
@@ -1673,24 +1673,24 @@ export default function AdminDashboard() {
                               title={campaign.status === 'active' ? 'Pause Campaign' : 'Activate Campaign'}
                             >
                               {campaign.status === 'active' ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
+                              </svg>
                               ) : (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                                 </svg>
                               )}
-                            </button>
-                            <button
-                              onClick={() => deleteCampaign(campaign._id)}
+                      </button>
+                      <button
+                        onClick={() => deleteCampaign(campaign._id)}
                               className="text-red-600 hover:text-red-900"
                               title="Delete Campaign"
-                            >
+                      >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                               </svg>
-                            </button>
+                      </button>
                             <button
                               onClick={() => shareCampaign(campaign)}
                               className="text-indigo-600 hover:text-indigo-900"
@@ -1701,13 +1701,13 @@ export default function AdminDashboard() {
                               </svg>
                             </button>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
           </div>
         );
         

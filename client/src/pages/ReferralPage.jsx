@@ -10,6 +10,7 @@ export default function ReferralPage() {
   const [campaigns, setCampaigns] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [phone, setPhone] = useState('');
+  const [upiId, setUpiId] = useState('');
   const [referralLink, setReferralLink] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [generatingLink, setGeneratingLink] = useState(false);
@@ -23,6 +24,12 @@ export default function ReferralPage() {
     const userId = localStorage.getItem('userId');
     if (userId && userId.length === 10 && /^\d+$/.test(userId)) {
       setPhone(userId);
+    }
+    
+    // Check if user has a stored UPI ID
+    const storedUpiId = localStorage.getItem('upiId');
+    if (storedUpiId) {
+      setUpiId(storedUpiId);
     }
   }, []);
 
@@ -80,13 +87,22 @@ export default function ReferralPage() {
       return;
     }
 
+    if (!upiId || !upiId.includes('@')) {
+      toast.error('Please enter a valid UPI ID (e.g., example@upi)');
+      return;
+    }
+
     try {
       setGeneratingLink(true);
+      
+      // Store the UPI ID for future use
+      localStorage.setItem('upiId', upiId);
       
       // Create or get referral code from backend
       const response = await axios.post('https://campaign-pohg.onrender.com/api/referrals/generate', {
         referrerId: phone,
-        campaignId: selectedCampaign._id
+        campaignId: selectedCampaign._id,
+        upiId: upiId // Send UPI ID to backend
       });
       
       if (response.data && response.data.referral) {
@@ -228,17 +244,22 @@ export default function ReferralPage() {
           )}
         </div>
 
-        <div className={`bg-white rounded-lg shadow-sm p-6 mb-6 ${!selectedCampaign ? 'opacity-75' : ''}`}>
-          <h2 className="text-xl font-semibold mb-4">Step 2: Enter Your Mobile Number</h2>
+        <div className={`bg-white rounded-lg shadow-sm p-6 mb-6 ${!selectedCampaign ? 'opacity-90' : ''}`}>
+          <h2 className="text-xl font-semibold mb-4">Step 2: Enter Your Details</h2>
           
           <div className="max-w-md">
             <p className="text-gray-600 mb-4">
-              This number will be used to track your referrals and earnings.
+              These details will be used to track your referrals and earnings.
+              {!selectedCampaign && (
+                <span className="block mt-2 text-amber-600 font-medium">
+                  Please select a campaign above first
+                </span>
+              )}
             </p>
             
             <div className="mb-4">
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Mobile Number
+                Mobile Number <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -252,17 +273,43 @@ export default function ReferralPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Enter 10-digit mobile number"
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                    !phone && selectedCampaign ? 'border-amber-300 bg-amber-50' : 'border-gray-300'
+                  }`}
                   pattern="\d{10}"
-                  disabled={!selectedCampaign}
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500">Your mobile number will be used to track your earnings</p>
             </div>
             
+            <div className="mb-4">
+              <label htmlFor="upiId" className="block text-sm font-medium text-gray-700 mb-1">
+                UPI ID <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  id="upiId"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  placeholder="Enter your UPI ID (e.g., example@upi)"
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                    !upiId && selectedCampaign ? 'border-amber-300 bg-amber-50' : 'border-gray-300'
+                  }`}
+                  pattern=".+@.+"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Your earnings will be sent to this UPI ID</p>
+            </div>
+            
             <button
               onClick={generateReferralLink}
-              disabled={!selectedCampaign || generatingLink}
+              disabled={!selectedCampaign || generatingLink || !phone || !upiId}
               className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {generatingLink ? (
@@ -270,6 +317,10 @@ export default function ReferralPage() {
                   <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
                   Generating...
                 </>
+              ) : !selectedCampaign ? (
+                'Select a Campaign First'
+              ) : !phone || !upiId ? (
+                'Fill in All Details'
               ) : (
                 'Generate Referral Link'
               )}

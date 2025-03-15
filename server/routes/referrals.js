@@ -18,7 +18,7 @@ function generateReferralCode() {
 // Create a new referral link
 router.post('/generate', async (req, res) => {
   try {
-    const { referrerId, campaignId } = req.body;
+    const { referrerId, campaignId, upiId } = req.body;
     
     if (!referrerId || !campaignId) {
       return res.status(400).json({ message: 'Referrer ID and Campaign ID are required' });
@@ -41,7 +41,8 @@ router.post('/generate', async (req, res) => {
       referrerId,
       campaignId,
       referralCode,
-      amount: referralAmount
+      amount: referralAmount,
+      upiId: upiId || '' // Store UPI ID in the referral record
     });
     
     // Return the referral details
@@ -111,7 +112,7 @@ router.get('/track/:referralCode', async (req, res) => {
 // Update conversion from referral
 router.post('/conversion', async (req, res) => {
   try {
-    const { referralCode, userId, conversionId } = req.body;
+    const { referralCode, userId, conversionId, upiId } = req.body;
     
     if (!referralCode || !userId || !conversionId) {
       return res.status(400).json({ message: 'Referral code, user ID, and conversion ID are required' });
@@ -145,6 +146,11 @@ router.post('/conversion', async (req, res) => {
     
     // Update total earned
     referral.totalEarned += referral.amount;
+    
+    // Update UPI ID if provided and not already set
+    if (upiId && !referral.upiId) {
+      referral.upiId = upiId;
+    }
     
     await referral.save();
     
@@ -184,6 +190,7 @@ router.get('/user/:referrerId', async (req, res) => {
         conversionCount: referral.conversionCount,
         amount: referral.amount,
         totalEarned: referral.totalEarned,
+        upiId: referral.upiId,
         createdAt: referral.createdAt
       };
     }));

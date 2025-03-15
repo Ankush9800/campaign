@@ -17,6 +17,10 @@ const ReferralSchema = new mongoose.Schema({
     ref: 'Campaign',
     required: true
   },
+  upiId: {
+    type: String,
+    default: ''
+  },
   referredUsers: [{
     userId: String, // Phone number or ID of referred user
     conversionId: String, // ID of the conversion if completed
