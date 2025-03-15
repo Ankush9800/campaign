@@ -57,6 +57,22 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint for UptimeRobot
+app.get('/api/health', (req, res) => {
+  const serverStatus = {
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  };
+  
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json(serverStatus);
+  }
+  
+  res.json(serverStatus);
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/campaigns', campaignRoutes);

@@ -16,6 +16,8 @@ const campaignSchema = new mongoose.Schema({
   payoutRate: { type: Number, required: true, min: 0 },
   shareUrl: { type: String },
   details: { type: String },
+  imageUrl: { type: String },
+  slug: { type: String },
   howItWorks: {
     type: [howItWorksStepSchema],
     default: [

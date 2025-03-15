@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
 import CampaignPage from './pages/CampaignPage';
 import CampaignPaused from './pages/CampaignPaused';
+import ContactUs from './pages/ContactUs';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} /> {/* No protection */}
           <Route path="/campaigns/:slug" element={<CampaignPage />} />
           <Route path="/campaign-paused" element={<CampaignPaused />} />
+          <Route path="/contact" element={<ContactUs />} />
         </Routes>
       </div>
     </Router>

@@ -1260,10 +1260,10 @@ export default function AdminDashboard() {
                   onChange={handleInputChange}
                   className="w-full p-2 border border-gray-300 rounded"
                   placeholder="Defaults to Payout Rate if empty"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
             </div>
 
             <div>

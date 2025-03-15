@@ -22,10 +22,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState({
-    totalPayouts: '₹0',
-    activeUsers: '0',
+    totalPayouts: '₹75000+',
+    activeUsers: '7000+',
     campaigns: '0',
-    avgPayout: '₹0'
+    avgPayout: '₹250+'
   });
 
   useEffect(() => {
@@ -44,30 +44,13 @@ export default function Home() {
         const activeCampaigns = campaignsResponse.data.filter(campaign => campaign.status === 'active');
         setCampaigns(activeCampaigns);
 
-        try {
-          // Fetch stats - wrap in try/catch to handle potential failure
-          const statsResponse = await axios.get('https://campaign-pohg.onrender.com/api/stats');
-          if (statsResponse.status === 200) {
-            const { totalPayouts, activeUsers, avgPayout } = statsResponse.data;
-            
-            // Format the stats
-            setStats({
-              totalPayouts: `₹${totalPayouts.toLocaleString()}`,
-              activeUsers: activeUsers.toLocaleString(),
-              campaigns: `${activeCampaigns.length}`,
-              avgPayout: `₹${avgPayout.toLocaleString()}`
-            });
-          }
-        } catch (statsError) {
-          console.error('Stats fetch error:', statsError);
-          // Set fallback stats using campaigns data
-          setStats({
-            totalPayouts: '₹1,000+',
-            activeUsers: '100+',
-            campaigns: `${activeCampaigns.length}`,
-            avgPayout: '₹100+'
-          });
-        }
+        // Set stats with fixed values for payouts and users, but dynamic campaign count
+        setStats({
+          totalPayouts: '₹75000+',
+          activeUsers: '7000+',
+          campaigns: `${activeCampaigns.length}`,
+          avgPayout: '₹250+'
+        });
         
         // Clear any previous errors since we at least have campaigns
         setError('');
@@ -507,9 +490,9 @@ export default function Home() {
                   </Link>
                 </li>
               </ul>
+            </div>
           </div>
         </div>
-      </div>
       </footer>
     </>
   );
