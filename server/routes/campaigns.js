@@ -2,33 +2,30 @@ const express = require('express');
 const router = express.Router();
 const Campaign = require('../models/Campaign');
 const authController = require('../controllers/authController'); // Import authController
+const mongoose = require('mongoose');
 
-// Get all campaigns
-router.get('/', (req, res) => {
-  // Return mock campaigns data
-  res.json([
-    {
-      _id: '1',
-      name: 'Test Campaign 1',
-      description: 'This is a test campaign',
-      trackingUrl: 'https://example.com/campaign1',
-      payoutRate: 100,
-      status: 'active'
-    },
-    {
-      _id: '2',
-      name: 'Test Campaign 2',
-      description: 'This is another test campaign',
-      trackingUrl: 'https://example.com/campaign2',
-      payoutRate: 150,
-      status: 'paused'
-    }
-  ]);
+// Get all campaigns - now fetches from the database
+router.get('/', async (req, res) => {
+  try {
+    const campaigns = await Campaign.find().sort({ createdAt: -1 });
+    res.json(campaigns);
+  } catch (err) {
+    res.status(500).json({ message: 'Server Error' });
+  }
 });
 
 // Create campaign (admin-only)
 router.post('/', authController.isAdmin, async (req, res) => {
   try {
+    // Create slug from name if not provided
+    if (!req.body.slug) {
+      req.body.slug = req.body.name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '') + 
+        '-' + Math.random().toString(36).substring(2, 8);
+    }
+    
     const campaign = new Campaign(req.body);
     await campaign.save();
     res.status(201).json(campaign);
@@ -37,14 +34,26 @@ router.post('/', authController.isAdmin, async (req, res) => {
   }
 });
 
-// Update campaign
-router.put('/:id', async (req, res) => {
+// Update campaign - works with both ID and slug
+router.put('/:identifier', async (req, res) => {
   try {
-    const campaign = await Campaign.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    let campaign;
+    
+    // Check if the identifier is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(req.params.identifier)) {
+      campaign = await Campaign.findByIdAndUpdate(
+        req.params.identifier,
+        req.body,
+        { new: true, runValidators: true }
+      );
+    } else {
+      // If not a valid ObjectId, treat as slug
+      campaign = await Campaign.findOneAndUpdate(
+        { slug: req.params.identifier },
+        req.body,
+        { new: true, runValidators: true }
+      );
+    }
 
     if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
     res.json(campaign);
@@ -53,10 +62,19 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete campaign
-router.delete('/:id', async (req, res) => {
+// Delete campaign - works with both ID and slug
+router.delete('/:identifier', async (req, res) => {
   try {
-    const campaign = await Campaign.findByIdAndDelete(req.params.id);
+    let campaign;
+    
+    // Check if the identifier is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(req.params.identifier)) {
+      campaign = await Campaign.findByIdAndDelete(req.params.identifier);
+    } else {
+      // If not a valid ObjectId, treat as slug
+      campaign = await Campaign.findOneAndDelete({ slug: req.params.identifier });
+    }
+    
     if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
     res.json({ message: 'Campaign deleted' });
   } catch (err) {
@@ -64,10 +82,19 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// GET single campaign by ID
-router.get('/:id', async (req, res) => {
+// GET single campaign - works with both ID and slug
+router.get('/:identifier', async (req, res) => {
   try {
-    const campaign = await Campaign.findById(req.params.id);
+    let campaign;
+    
+    // Check if the identifier is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(req.params.identifier)) {
+      campaign = await Campaign.findById(req.params.identifier);
+    } else {
+      // If not a valid ObjectId, treat as slug
+      campaign = await Campaign.findOne({ slug: req.params.identifier });
+    }
+    
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
     }

@@ -46,6 +46,12 @@ const ConversionsTable = ({ conversions, loading }) => {
     }
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+      .then(() => console.log('Copied to clipboard'))
+      .catch(err => console.error('Failed to copy: ', err));
+  };
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden my-4">
       <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
@@ -59,6 +65,7 @@ const ConversionsTable = ({ conversions, loading }) => {
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UPI ID</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payout</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offer</th>
@@ -72,7 +79,36 @@ const ConversionsTable = ({ conversions, loading }) => {
                   {conversion.id || 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {conversion.phone || 'N/A'}
+                  <div className="flex items-center">
+                    <span>{conversion.phone || 'N/A'}</span>
+                    {conversion.phone && (
+                      <button
+                        onClick={() => copyToClipboard(conversion.phone)}
+                        className="ml-2 text-gray-500 hover:text-blue-600"
+                        title="Copy Phone Number"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div className="flex items-center">
+                    <span>{conversion.upi_id || 'N/A'}</span>
+                    {conversion.upi_id && (
+                      <button
+                        onClick={() => copyToClipboard(conversion.upi_id)}
+                        className="ml-2 text-gray-500 hover:text-blue-600"
+                        title="Copy UPI ID"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[conversion.status?.toLowerCase()] || statusColors.default}`}>

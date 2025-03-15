@@ -103,8 +103,8 @@ export default function CampaignPage() {
   const shareCampaign = () => {
     if (!campaign) return;
     
-    // Create campaign-specific shareable URL
-    const campaignURL = `${window.location.origin}/campaigns/${campaign._id}`;
+    // Create campaign-specific shareable URL using slug if available
+    const campaignURL = `${window.location.origin}/campaigns/${campaign.slug || campaign._id}`;
     
     if (navigator.share) {
       navigator.share({
@@ -127,7 +127,8 @@ export default function CampaignPage() {
   };
 
   // Default campaign image if none provided
-  const campaignImage = campaign?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(campaign?.name || 'Campaign')}&background=0D8ABC&color=fff&size=300`;
+  const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(campaign?.name || 'Campaign')}&background=0D8ABC&color=fff&size=300`;
+  const campaignImage = campaign?.imageUrl || defaultImageUrl;
 
   if (loading) {
     return (
@@ -188,8 +189,9 @@ export default function CampaignPage() {
                 alt={campaign.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
+                  console.log("Image failed to load, using fallback");
                   e.target.onerror = null;
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(campaign.name)}&background=0D8ABC&color=fff&size=300`;
+                  e.target.src = defaultImageUrl;
                 }}
               />
             </div>
