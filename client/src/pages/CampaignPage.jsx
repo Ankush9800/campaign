@@ -43,8 +43,8 @@ export default function CampaignPage() {
     fetchCampaign();
   }, [slug]);
 
-  // If campaign is paused, redirect to CampaignPaused page
-  if (campaign && campaign.status === 'paused') {
+  // If campaign is not active (paused or inactive), redirect to CampaignPaused page
+  if (campaign && !campaign.isActive) {
     return <Navigate to="/campaign-paused" replace />;
   }
 

@@ -24,14 +24,14 @@ mongoose.connect(process.env.MONGODB_URI)
       // Create new admin with plain text password
       const admin = new SimpleAdmin({
         username: 'admin',
-        password: 'admin123',
+        password: 'Sampan9413@',
         name: 'Administrator'
       });
       
       await admin.save();
       console.log('SimpleAdmin user created successfully!');
       console.log('Username: admin');
-      console.log('Password: admin123');
+      console.log('Password: Sampan9413@');
       console.log('Please note this is using plain text password for testing.');
     } catch (error) {
       console.error('Error creating SimpleAdmin:', error);

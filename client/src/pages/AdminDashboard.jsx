@@ -448,12 +448,35 @@ export default function AdminDashboard() {
       );
       
       // Ensure required fields are present
+      if (!campaignData.name || campaignData.name.trim() === '') {
+        throw new Error('Campaign name is required');
+      }
+      
+      if (!campaignData.trackingUrl || campaignData.trackingUrl.trim() === '') {
+        throw new Error('Tracking URL is required');
+      }
+      
       if (!campaignData.offerId) {
         campaignData.offerId = `${campaignData.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
       }
       
-      if (!campaignData.payout) {
+      if (!campaignData.payout || isNaN(parseFloat(campaignData.payout))) {
         campaignData.payout = parseFloat(campaignData.payoutRate);
+      }
+      
+      // Ensure payout is a valid number
+      if (isNaN(campaignData.payout) || campaignData.payout <= 0) {
+        throw new Error('Invalid payout value');
+      }
+      
+      // Ensure payoutRate is a valid number
+      if (isNaN(campaignData.payoutRate) || campaignData.payoutRate <= 0) {
+        throw new Error('Invalid payout rate value');
+      }
+      
+      // Generate slug if not provided
+      if (!campaignData.slug) {
+        campaignData.slug = `${campaignData.name.toLowerCase().replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 8)}`;
       }
       
       if (editMode) {
@@ -470,7 +493,10 @@ export default function AdminDashboard() {
       fetchData();
       resetForm();
     } catch (err) {
-      handleApiError(err, 'submit campaign');
+      console.error('Campaign submit error:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to submit campaign';
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -480,12 +506,22 @@ export default function AdminDashboard() {
   const validateForm = () => {
     if (!formData.name.trim()) {
       setError('Campaign name is required');
+      toast.error('Campaign name is required');
       return false;
     }
+    
+    if (!formData.trackingUrl.trim()) {
+      setError('Tracking URL is required');
+      toast.error('Tracking URL is required');
+      return false;
+    }
+    
     if (isNaN(formData.payoutRate) || parseFloat(formData.payoutRate) <= 0) {
       setError('Invalid payout rate');
+      toast.error('Please enter a valid payout rate');
       return false;
     }
+    
     return true;
   };
 
