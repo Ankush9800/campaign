@@ -6,8 +6,8 @@ import Navbar from '../components/Navbar';
 
 // Create a temporary toast function until react-hot-toast is installed
 const toast = {
-  success: (message) => console.log('SUCCESS:', message),
-  error: (message) => console.error('ERROR:', message)
+  success: (message) => {},
+  error: (message) => {}
 };
 
 export default function CampaignPage() {
@@ -30,10 +30,8 @@ export default function CampaignPage() {
 
         if (!response.ok) throw new Error('Campaign not found');
         const data = await response.json();
-        console.log('Fetched campaign data:', data);
         setCampaign(data);
       } catch (err) {
-        console.error('Error fetching campaign:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -103,7 +101,6 @@ export default function CampaignPage() {
   const shareCampaign = () => {
     if (!campaign) return;
     
-    // Create campaign-specific shareable URL using slug if available
     const campaignURL = `${window.location.origin}/campaigns/${campaign.slug || campaign._id}`;
     
     if (navigator.share) {
@@ -112,10 +109,9 @@ export default function CampaignPage() {
         text: `Check out this offer: ${campaign.name}`,
         url: campaignURL,
       })
-      .then(() => console.log('Shared successfully'))
-      .catch((error) => console.log('Share error:', error));
+      .then(() => {})
+      .catch(() => {});
     } else {
-      // Fallback for browsers that don't support navigator.share
       navigator.clipboard.writeText(campaignURL)
         .then(() => {
           toast.success('Link copied to clipboard!');

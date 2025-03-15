@@ -194,9 +194,8 @@ export default function AdminDashboard() {
 
   // Handle API errors consistently
   const handleApiError = (err, operation) => {
-    const errorMessage = err.response?.data?.error 
-      || `Failed to complete ${operation}. Please try again.`;
-    setError(errorMessage);
+    const errorMessage = err.response?.data?.message || err.message || `Failed to ${operation}`;
+    toast.error(errorMessage);
   };
 
   // Function to fetch all data
@@ -350,10 +349,8 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       
-      // Get the token from localStorage
       const token = localStorage.getItem('adminToken');
       
-      // Create a new payout with the token in headers
       const response = await axios.post(
         'https://campaign-pohg.onrender.com/api/payouts',
         {
@@ -371,14 +368,10 @@ export default function AdminDashboard() {
         }
       );
       
-      console.log('Payout created successfully:', response.data);
       setPayouts([...payouts, response.data]);
       toast.success('Payout record created successfully');
     } catch (err) {
-      console.error('Error creating payout:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      toast.error(err.response?.data?.error || 'Failed to create payout');
+      handleApiError(err, 'create payout');
     } finally {
       setLoading(false);
     }
@@ -1012,7 +1005,6 @@ export default function AdminDashboard() {
 
   // Share campaign function
   const shareCampaign = (campaign) => {
-    // Create campaign-specific shareable URL using slug if available, otherwise fall back to ID
     const campaignURL = `${window.location.origin}/campaigns/${campaign.slug || campaign._id}`;
     
     if (navigator.share) {
@@ -1022,12 +1014,8 @@ export default function AdminDashboard() {
         url: campaignURL
       })
       .then(() => toast.success('Shared successfully!'))
-      .catch((err) => {
-        console.error('Share error:', err);
-        toast.error('Failed to share');
-      });
+      .catch(() => toast.error('Failed to share'));
     } else {
-      // Fallback for browsers that don't support the Web Share API
       navigator.clipboard.writeText(campaignURL)
         .then(() => toast.success('Campaign link copied to clipboard!'))
         .catch(() => toast.error('Failed to copy link'));
@@ -1416,13 +1404,15 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        campaign.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {campaign.status}
-                      </span>
-                    </td>
+  campaign.status === 'active' 
+    ? 'bg-green-100 text-green-800'
+    : campaign.status === 'paused'
+    ? 'bg-yellow-100 text-yellow-800'
+    : 'bg-gray-100 text-gray-800'
+}`}>
+                            {campaign.status}
+                          </span>
+                        </td>
                     <td className="px-6 py-4 text-right text-blue-600 font-medium">
                       ₹{campaign.payoutRate}
                     </td>
@@ -1439,7 +1429,15 @@ export default function AdminDashboard() {
                             </button>
                             <button
                               onClick={() => {
-                                const newStatus = campaign.status === 'active' ? 'inactive' : 'active';
+                                let newStatus;
+                                if (campaign.status === 'active') {
+                                  newStatus = 'paused';
+                                } else if (campaign.status === 'paused') {
+                                  newStatus = 'active';
+                                } else {
+                                  newStatus = 'active';
+                                }
+                                
                                 axios.put(`https://campaign-pohg.onrender.com/api/campaigns/${campaign._id}`, {
                                   name: campaign.name,
                                   offerId: campaign.offerId,
@@ -1454,14 +1452,14 @@ export default function AdminDashboard() {
                                 })
                                 .then(() => {
                                   fetchData();
-                                  toast.success(`Campaign ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+                                  toast.success(`Campaign ${newStatus === 'active' ? 'activated' : 'paused'} successfully`);
                                 })
                                 .catch(err => {
                                   handleApiError(err, 'update campaign status');
                                 });
                               }}
                               className={`${campaign.status === 'active' ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'}`}
-                              title={campaign.status === 'active' ? 'Deactivate Campaign' : 'Activate Campaign'}
+                              title={campaign.status === 'active' ? 'Pause Campaign' : 'Activate Campaign'}
                             >
                               {campaign.status === 'active' ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
