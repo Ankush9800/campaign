@@ -61,19 +61,4 @@ async function cleanupTestCampaigns() {
 }
 
 // Run the cleanup function
-cleanupTestCampaigns();
-
-/*
-INSTRUCTIONS FOR RUNNING ON RENDER:
-
-1. Log in to your Render dashboard
-2. Go to your server service
-3. Click on the "Shell" tab
-4. Run the following commands:
-
-   cd /opt/render/project/src/server
-   node cleanupTestCampaigns.js
-
-This will run the script in your production environment with access to your 
-MongoDB connection string from the environment variables.
-*/ 
+cleanupTestCampaigns(); 

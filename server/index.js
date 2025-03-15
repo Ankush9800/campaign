@@ -12,8 +12,6 @@ const campaignRoutes = require('./routes/campaigns');
 const usersRouter = require('./routes/users');
 const payoutRoutes = require('./routes/payouts');
 const settingsRoutes = require('./routes/settings');
-const statsRoutes = require('./routes/stats');
-const referralRoutes = require('./routes/referrals');
 
 const app = express();
 
@@ -58,30 +56,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint for UptimeRobot
-app.get('/api/health', (req, res) => {
-  const serverStatus = {
-    status: 'ok',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-  };
-  
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json(serverStatus);
-  }
-  
-  res.json(serverStatus);
-});
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/payouts', payoutRoutes);
 app.use('/api/users', usersRouter);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/stats', statsRoutes);
-app.use('/api/referrals', referralRoutes);
 
 // Admin routes (including login)
 app.use('/api/admin', adminRoutes);

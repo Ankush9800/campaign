@@ -14,11 +14,8 @@ const campaignSchema = new mongoose.Schema({
   requirements: [String],
   trackingUrl: { type: String, required: true },
   payoutRate: { type: Number, required: true, min: 0 },
-  referralAmount: { type: Number, default: 0, min: 0 },
   shareUrl: { type: String },
   details: { type: String },
-  imageUrl: { type: String },
-  slug: { type: String },
   howItWorks: {
     type: [howItWorksStepSchema],
     default: [

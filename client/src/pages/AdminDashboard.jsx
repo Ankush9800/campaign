@@ -125,12 +125,6 @@ export default function AdminDashboard() {
   const [dbConversionStatus, setDbConversionStatus] = useState('all');
   const [dbConversionSearch, setDbConversionSearch] = useState('');
   
-  // Referral settings
-  const [referralSettings, setReferralSettings] = useState({
-    referralAmount: 10,
-    enabled: true
-  });
-  
   // Add fetchStats function definition
   const fetchStats = async () => {
     try {
@@ -248,66 +242,9 @@ export default function AdminDashboard() {
         delete axios.defaults.headers.common['Authorization'];
         setIsAuthenticated(false);
         toast.error('Session expired. Please login again.');
-              } else {
+      } else {
         setError('Failed to fetch data');
       }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to fetch referral settings
-  const fetchReferralSettings = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      
-      // We'll get this from the same endpoint that provides other settings
-      const response = await axios.get('https://campaign-pohg.onrender.com/api/settings', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data && response.data.referralAmount !== undefined) {
-        setReferralSettings({
-          ...referralSettings,
-          referralAmount: response.data.referralAmount
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching referral settings:', error);
-      handleApiError(error, 'fetch referral settings');
-    }
-  };
-
-  // Function to update referral amount
-  const updateReferralAmount = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        toast.error('Authentication required');
-        return;
-      }
-      
-      setLoading(true);
-      
-      const response = await axios.post(
-        'https://campaign-pohg.onrender.com/api/referrals/admin/settings',
-        { referralAmount: referralSettings.referralAmount },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      if (response.status === 200) {
-        toast.success('Referral amount updated successfully');
-      }
-    } catch (error) {
-      console.error('Error updating referral amount:', error);
-      handleApiError(error, 'update referral amount');
     } finally {
       setLoading(false);
     }
@@ -652,15 +589,6 @@ export default function AdminDashboard() {
       ...prev,
       [name]: name === 'payoutRate' ? parseFloat(value) || '' : value
     }));
-  };
-
-  // Referral settings change handler
-  const handleReferralSettingsChange = (e) => {
-    const { name, value } = e.target;
-    setReferralSettings({
-      ...referralSettings,
-      [name]: name === 'referralAmount' ? parseFloat(value) || 0 : value
-    });
   };
 
   // Process payouts in bulk for selected users
@@ -1077,8 +1005,8 @@ export default function AdminDashboard() {
 
   // Share campaign function
   const shareCampaign = (campaign) => {
-    // Create campaign-specific shareable URL using slug if available, otherwise fall back to ID
-    const campaignURL = `${window.location.origin}/campaigns/${campaign.slug || campaign._id}`;
+    // Create campaign-specific shareable URL
+    const campaignURL = `${window.location.origin}/campaigns/${campaign._id}`;
     
     if (navigator.share) {
       navigator.share({
@@ -1309,22 +1237,7 @@ export default function AdminDashboard() {
                       step="0.01"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Referral Amount (₹)</label>
-                    <input
-                      type="number"
-                      name="referralAmount"
-                      value={formData.referralAmount || 0}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded"
-                      min="0"
-                      step="0.01"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Amount paid to referrers for each successful conversion (0 = no referral program)
-                    </p>
-                  </div>
-                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -1405,85 +1318,31 @@ export default function AdminDashboard() {
               </select>
             </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
-                  <h3 className="text-blue-700 font-medium mb-2">Campaign Image</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Image URL</label>
-                  <input
-                    type="url"
-                    name="imageUrl"
-                      value={formData.imageUrl || ''}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="https://example.com/image.jpg"
-                  />
-                    <p className="text-xs text-gray-500 mt-1 mb-2">
-                      URL to an image that will be displayed on the campaign page. Recommended size: 300x300 pixels.
-                    </p>
-                    
-                    <div className="mt-2 mb-2 text-xs text-gray-600">
-                      <details>
-                        <summary className="font-medium cursor-pointer">Sample Image URLs (Click to expand)</summary>
-                        <div className="mt-2 space-y-2 pl-2 border-l-2 border-gray-200">
-                          <div>
-                            <div className="font-medium">Banking Offers:</div>
-                            <div>IndusInd Bank: https://i.imgur.com/k9hDu7f.png</div>
-                            <div>ICICI Bank: https://i.imgur.com/vLweYHx.png</div>
-                            <div>HDFC Bank: https://i.imgur.com/DObgXdx.png</div>
-                          </div>
-                          <div>
-                            <div className="font-medium">Shopping Offers:</div>
-                            <div>Amazon: https://i.imgur.com/RTlBgNL.png</div>
-                            <div>Flipkart: https://i.imgur.com/FgSS2AO.png</div>
-                          </div>
-                          <div>
-                            <div className="font-medium">App Installs:</div>
-                            <div>General App: https://i.imgur.com/BDRe8IW.png</div>
-                          </div>
-                        </div>
-                      </details>
-                    </div>
-                    
-                    {formData.imageUrl ? (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium mb-1">Image Preview:</p>
-                        <div className="border border-gray-200 rounded overflow-hidden w-32 h-32">
-                          <img 
-                            src={formData.imageUrl} 
-                            alt="Campaign Preview" 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name || 'Campaign')}&background=0D8ABC&color=fff&size=300`;
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium mb-1">Default Image (if no URL provided):</p>
-                        <div className="border border-gray-200 rounded overflow-hidden w-32 h-32">
-                          <img 
-                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name || 'Campaign')}&background=0D8ABC&color=fff&size=300`}
-                            alt="Default Campaign" 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Details (HTML)</label>
                   <textarea
                     name="details"
-                    value={formData.details || ''}
+                    value={formData.details}
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
                     rows="3"
                     placeholder="Optional HTML content for additional campaign details"
                   ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Image URL</label>
+                  <input
+                    type="url"
+                    name="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    URL to an image that will be displayed on the campaign page.
+                  </p>
                 </div>
 
                 {/* How It Works Section */}
@@ -1575,14 +1434,8 @@ export default function AdminDashboard() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Image
-                      </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Payout Rate
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Referral Amount
+                        Payout
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
@@ -1612,75 +1465,28 @@ export default function AdminDashboard() {
                         {campaign.status}
                       </span>
                     </td>
-                        <td className="px-6 py-4 text-center">
-                          {campaign.imageUrl ? (
-                            <div className="mx-auto w-10 h-10 rounded-full overflow-hidden shadow-sm border border-gray-200">
-                              <img 
-                                src={campaign.imageUrl} 
-                                alt={campaign.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(campaign.name)}&background=0D8ABC&color=fff&size=300`;
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                // For IndusInd Bank campaign
-                                if (campaign.name.includes('IndusInd')) {
-                                  updateCampaignImage(campaign._id, 'https://i.imgur.com/k9hDu7f.png');
-                                } else {
-                                  // For other campaigns, open edit form
-                                  setFormData({...campaign});
-                                  setActiveTab('campaigns');
-                                }
-                              }}
-                              className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-50 rounded"
-                            >
-                              Add Image
-                            </button>
-                          )}
+                    <td className="px-6 py-4 text-right text-blue-600 font-medium">
+                      ₹{campaign.payoutRate}
                     </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="text-sm font-medium text-gray-900">₹{campaign.payoutRate}</div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {campaign.referralAmount > 0 ? `₹${campaign.referralAmount}` : '—'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
-                          <div className="flex space-x-2">
+                          <div className="flex space-x-3 justify-end">
                             <button
-                              onClick={() => {
-                                setFormData({...campaign});
-                                setActiveTab('campaigns');
-                              }}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Edit Campaign"
+                              onClick={() => shareCampaign(campaign)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                              title="Share Campaign"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                               </svg>
                             </button>
                       <button
-                              onClick={() => handleCampaignStatusToggle(campaign._id, campaign.status === 'active' ? 'inactive' : 'active')}
-                              className={`${
-                                campaign.status === 'active' ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'
-                              }`}
-                              title={campaign.status === 'active' ? 'Pause Campaign' : 'Activate Campaign'}
-                            >
-                              {campaign.status === 'active' ? (
+                        onClick={() => editCampaign(campaign)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Edit Campaign"
+                      >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                               </svg>
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                </svg>
-                              )}
                       </button>
                       <button
                         onClick={() => deleteCampaign(campaign._id)}
@@ -1691,15 +1497,6 @@ export default function AdminDashboard() {
                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                               </svg>
                       </button>
-                            <button
-                              onClick={() => shareCampaign(campaign)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="Share Campaign"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                              </svg>
-                            </button>
                           </div>
                     </td>
                   </tr>
@@ -2416,134 +2213,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         );
-      case 'referrals':
-        return (
-          <div className="p-4">
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">Referral Program Management</h2>
-              <p className="text-gray-600 mb-4">
-                Manage your referral program settings and view referral statistics.
-              </p>
-            </div>
-            
-            {/* Referral Settings Section */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h3 className="text-lg font-medium mb-4">Referral Settings</h3>
-              
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Referral Reward Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    value={referralSettings.referralAmount || 0}
-                    onChange={(e) => handleReferralSettingsChange(e)}
-                    name="referralAmount"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter amount in ₹"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Amount users will receive for each successful referral
-                  </p>
-                </div>
-                
-                <div className="mt-6">
-                  <button
-                    onClick={updateReferralAmount}
-                    className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Saving...
-                      </span>
-                    ) : "Save Settings"}
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            {/* Referral Statistics */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h3 className="text-lg font-medium mb-4">Referral Statistics</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Total Referrals</p>
-                  <p className="text-2xl font-bold text-blue-600">0</p>
-                </div>
-                
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Successful Referrals</p>
-                  <p className="text-2xl font-bold text-green-600">0</p>
-                </div>
-                
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Total Rewards Paid</p>
-                  <p className="text-2xl font-bold text-purple-600">₹0</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Referral Links Table */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-800">Recent Referrals</h3>
-                <button
-                  onClick={() => fetchReferralSettings()}
-                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                  </svg>
-                  Refresh
-                </button>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Referrer</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Referred User</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reward</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                        No referral data available
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        );
-      case 'settings':
-        return (
-          <div className="p-4">
-            <h2 className="text-xl font-semibold mb-4">Settings</h2>
-            <p className="text-gray-600 mb-6">
-              Configure application settings and preferences.
-            </p>
-            
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium mb-4">General Settings</h3>
-              <p className="text-gray-500 mb-4">
-                More settings will be added in future updates.
-              </p>
-            </div>
-          </div>
-        );
     }
   };
 
@@ -2591,100 +2260,6 @@ export default function AdminDashboard() {
     navigator.clipboard.writeText(text)
       .then(() => toast.success('Copied to clipboard!'))
       .catch(() => toast.error('Failed to copy'));
-  };
-
-  // Update a campaign's image URL
-  const updateCampaignImage = async (campaignId, imageUrl) => {
-    try {
-      setLoading(true);
-      
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Authentication required');
-        return;
-      }
-      
-      const response = await axios.put(
-        `https://campaign-pohg.onrender.com/api/campaigns/${campaignId}`,
-        { imageUrl },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      if (response.status === 200) {
-        toast.success('Campaign image updated successfully');
-        // Refresh campaigns list
-        fetchCampaigns();
-      }
-    } catch (error) {
-      console.error('Error updating campaign image:', error);
-      toast.error(error.response?.data?.message || 'Failed to update campaign image');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to fetch only campaigns
-  const fetchCampaigns = async () => {
-    try {
-      setLoading(true);
-      
-      // Check if token exists before making requests
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      // Ensure axios headers are set
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      // Fetch campaigns
-      const campaignsResponse = await axios.get('https://campaign-pohg.onrender.com/api/campaigns');
-      if (campaignsResponse.status === 200) {
-        setCampaigns(campaignsResponse.data);
-      }
-      
-    } catch (error) {
-      console.error('Error fetching campaigns:', error);
-      handleApiError(error, 'fetch campaigns');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Toggle campaign status (active/inactive)
-  const handleCampaignStatusToggle = async (campaignId, newStatus) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        toast.error('Authentication required');
-        return;
-      }
-      
-      const response = await axios.put(
-        `https://campaign-pohg.onrender.com/api/campaigns/${campaignId}`,
-        { status: newStatus },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      if (response.status === 200) {
-        toast.success(`Campaign ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-        // Update campaigns in state
-        setCampaigns(campaigns.map(c => 
-          c._id === campaignId ? { ...c, status: newStatus } : c
-        ));
-      }
-    } catch (error) {
-      console.error('Error updating campaign status:', error);
-      handleApiError(error, 'update campaign status');
-    }
   };
 
   return (
@@ -2764,16 +2339,6 @@ export default function AdminDashboard() {
                     onClick={() => setActiveTab('hiqmobi')}
                   >
                     HiQmobi
-                  </button>
-                  <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                      activeTab === 'referrals' 
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('referrals')}
-                  >
-                    Referrals
                   </button>
                   <button 
                     className={`border-b-2 py-4 px-1 text-sm font-medium ${

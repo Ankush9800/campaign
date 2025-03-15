@@ -490,9 +490,9 @@ export default function Home() {
                   </Link>
                 </li>
               </ul>
-            </div>
           </div>
         </div>
+      </div>
       </footer>
     </>
   );
