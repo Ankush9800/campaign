@@ -68,26 +68,21 @@ export default function CampaignPage() {
         throw new Error('Please enter a valid UPI ID (e.g., example@upi)');
       }
 
-      // Store submission in database
-      await axios.post('https://campaign-pohg.onrender.com/api/conversions', {
+      // Submit user details to backend
+      await axios.post('https://campaign-pohg.onrender.com/api/users', {
         phone: formData.phone,
         upiId: formData.upiId,
-        campaignName: campaign.name,
-        status: 'pending',
-        source: 'direct',
-        submissionType: 'form',
-        submittedData: {
-          campaignId: campaign._id,
-          campaignSlug: slug
-        }
+        campaignId: slug
       });
 
       // Mark as successful submission
       setSubmitSuccess(true);
       toast.success('Details submitted successfully!');
 
-      // Encode UPI ID and campaign name
+      // Encode UPI ID
       const encodedUPI = encodeURIComponent(formData.upiId);
+      
+      // Encode campaign name
       const encodedCampaignName = encodeURIComponent(campaign.name);
 
       // Build the affiliate link
