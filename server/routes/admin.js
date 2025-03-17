@@ -398,6 +398,7 @@ router.get('/db-conversions', async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const status = req.query.status;
     const search = req.query.search;
+    const source = req.query.source; // Add source parameter
     
     const skip = (page - 1) * limit;
     
@@ -407,10 +408,15 @@ router.get('/db-conversions', async (req, res) => {
       query.status = status;
     }
     
+    if (source) {
+      query.source = source;
+    }
+    
     if (search) {
       query.$or = [
         { phone: { $regex: search, $options: 'i' } },
         { upiId: { $regex: search, $options: 'i' } },
+        { campaignName: { $regex: search, $options: 'i' } },
         { offerName: { $regex: search, $options: 'i' } }
       ];
     }
@@ -436,7 +442,10 @@ router.get('/db-conversions', async (req, res) => {
       offer_id: conv.offerId,
       offer_name: conv.offerName,
       ip: conv.ip,
-      created_at: conv.createdAt
+      created_at: conv.createdAt,
+      source: conv.source,
+      submissionType: conv.submissionType,
+      submittedData: conv.submittedData
     }));
     
     // Calculate stats
@@ -470,6 +479,47 @@ router.get('/db-conversions', async (req, res) => {
         rejected: 0,
         totalPayout: 0
       }
+    });
+  }
+});
+
+// Store form submission
+router.post('/conversions', async (req, res) => {
+  try {
+    const {
+      phone,
+      upiId,
+      campaignName,
+      status = 'pending',
+      source = 'direct',
+      submissionType = 'form',
+      submittedData = {}
+    } = req.body;
+
+    // Create a new conversion record
+    const conversion = new Conversion({
+      clickId: `FORM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      phone,
+      upiId,
+      campaignName,
+      status,
+      source,
+      submissionType,
+      submittedData,
+      createdAt: new Date()
+    });
+
+    await conversion.save();
+
+    res.status(201).json({
+      message: 'Form submission stored successfully',
+      conversion
+    });
+  } catch (error) {
+    console.error('Error storing form submission:', error);
+    res.status(500).json({
+      error: 'Failed to store form submission',
+      message: error.message
     });
   }
 });
