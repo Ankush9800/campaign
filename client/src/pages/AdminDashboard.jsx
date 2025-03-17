@@ -430,8 +430,18 @@ export default function AdminDashboard() {
       
     } catch (err) {
       console.error('Create payout error:', err.response?.data || err.message);
+      
       if (err.response?.status === 400 && err.response?.data?.error === 'Missing required fields') {
         toast.error('Missing required fields. Please check the user data and try again.');
+      } else if (err.response?.status === 404) {
+        toast.error('User not found. The user may have been deleted.');
+        
+        // Refresh the users list to remove any deleted users
+        fetchData();
+      } else if (err.response?.status === 500) {
+        const errorDetails = err.response?.data?.details || 'Unknown server error';
+        toast.error(`Server error: ${errorDetails}`);
+        console.error('Detailed server error:', err.response?.data);
       } else {
         handleApiError(err, 'create payout');
       }

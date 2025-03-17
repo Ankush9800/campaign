@@ -23,6 +23,12 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
+    // First check if the user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
     const payout = new Payout({
       user: userId,
       amount,
@@ -33,13 +39,18 @@ router.post('/', async (req, res) => {
     
     await payout.save();
     
-    // Update the user's payoutStatus to 'processing'
-    await User.findByIdAndUpdate(userId, { payoutStatus: 'processing' });
+    // Try to update the user's status
+    try {
+      await User.findByIdAndUpdate(userId, { payoutStatus: 'processing' });
+    } catch (userError) {
+      console.error('Error updating user status:', userError);
+      // Continue even if user update fails
+    }
     
     res.status(201).json(payout);
   } catch (err) {
     console.error('Error creating payout:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
 
