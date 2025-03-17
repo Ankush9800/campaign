@@ -10,7 +10,7 @@ function App() {
   return (
     <Router>
       <div className="pt-16 grid place-items-center">
-        <Toaster position="top-center" />
+        <Toaster position="top-right" />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/admin" element={<AdminDashboard />} /> {/* No protection */}

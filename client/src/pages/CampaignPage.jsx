@@ -2,13 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
-// import { toast } from 'react-hot-toast';
-
-// Create a temporary toast function until react-hot-toast is installed
-const toast = {
-  success: (message) => {},
-  error: (message) => {}
-};
+import { toast } from 'react-hot-toast';
 
 export default function CampaignPage() {
   const { slug } = useParams();
@@ -69,10 +63,12 @@ export default function CampaignPage() {
       }
 
       // Submit user details to backend
-      await axios.post('https://campaign-pohg.onrender.com/api/users', {
+      await axios.post('https://campaign-pohg.onrender.com/api/campaign-submissions', {
         phone: formData.phone,
         upiId: formData.upiId,
-        campaignId: slug
+        campaignId: campaign._id,
+        campaignName: campaign.name,
+        redirectUrl: campaign.trackingUrl
       });
 
       // Mark as successful submission
