@@ -52,9 +52,8 @@ export default function ContactUs() {
               Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
             </p>
             <div className="space-y-4 text-gray-600">
-              <p><strong>Email:</strong> support@taskwala.com</p>
-              <p><strong>Phone:</strong> +91 9876543210</p>
-              <p><strong>Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM IST</p>
+              <p><strong>Email:</strong> taskwalaconnect@gmail.com</p>
+              <p><strong>Hours:</strong> Monday - Friday, 10:00 AM - 6:00 PM IST</p>
             </div>
           </div>
 
