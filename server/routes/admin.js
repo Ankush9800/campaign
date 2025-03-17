@@ -471,4 +471,44 @@ router.get('/db-conversions', async (req, res) => {
   }
 });
 
+// Add a manual payout rejection route
+router.post('/payouts/manual-reject', admin, async (req, res) => {
+  try {
+    const { payoutId, reason } = req.body;
+    
+    if (!payoutId) {
+      return res.status(400).json({ error: 'Payout ID is required' });
+    }
+    
+    const payout = await Payout.findById(payoutId);
+    if (!payout) {
+      return res.status(404).json({ error: 'Payout not found' });
+    }
+    
+    // Update payout
+    payout.status = 'rejected';
+    payout.rejectedAt = Date.now();
+    payout.rejectionReason = reason || 'Rejected by admin';
+    await payout.save();
+    
+    // Try to update user if it exists
+    if (payout.user) {
+      try {
+        await User.findByIdAndUpdate(payout.user, { 
+          payoutStatus: 'rejected', 
+          lastPayoutRejectionReason: reason || 'Rejected by admin' 
+        });
+      } catch (err) {
+        console.error('Error updating user:', err);
+        // Continue even if user update fails
+      }
+    }
+    
+    res.json({ success: true, message: 'Payout rejected successfully', payout });
+  } catch (err) {
+    console.error('Error rejecting payout:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
 module.exports = router;

@@ -1899,53 +1899,102 @@ export default function AdminDashboard() {
                                     
                                     console.log(`Attempting to reject payout with ID: ${payout._id}`);
                                     
-                                    const response = await axios.post(
-                                      `https://campaign-pohg.onrender.com/api/payouts/${payout._id}/reject`, 
-                                      { reason: 'Rejected by admin' },
-                                      { headers: { 'Authorization': `Bearer ${token}` } }
-                                    );
+                                    // Use a more direct URL structure
+                                    const url = 'https://campaign-pohg.onrender.com/api/payouts/reject';
+                                    console.log('Making request to:', url);
                                     
-                                    toast.dismiss(loadingToast);
-                                    console.log('Payout rejection response:', response.data);
-                                    
-                                    if (response.status === 200) {
-                                      toast.success('Payout rejected successfully');
-                                      // Update UI immediately to show rejected status
-                                      setPayouts(prevPayouts => 
-                                        prevPayouts.map(p => 
-                                          p._id === payout._id ? { ...p, status: 'rejected' } : p
-                                        )
-                                      );
+                                    try {
+                                      // Try with axios first
+                                      const response = await axios({
+                                        method: 'post',
+                                        url: url,
+                                        data: {
+                                          payoutId: payout._id,
+                                          reason: 'Rejected by admin'
+                                        },
+                                        headers: { 
+                                          'Authorization': `Bearer ${token}`,
+                                          'Content-Type': 'application/json'
+                                        }
+                                      });
                                       
-                                      // If the payout is associated with a user, update the user's payout status
-                                      if (payout.user) {
-                                        setUsers(prevUsers => 
-                                          prevUsers.map(u => 
-                                            u._id === payout.user._id ? { ...u, payoutStatus: 'rejected' } : u
+                                      toast.dismiss(loadingToast);
+                                      console.log('Payout rejection response:', response.data);
+                                      
+                                      if (response.status === 200) {
+                                        toast.success('Payout rejected successfully');
+                                        // Update UI immediately
+                                        setPayouts(prevPayouts => 
+                                          prevPayouts.map(p => 
+                                            p._id === payout._id ? { ...p, status: 'rejected' } : p
                                           )
                                         );
+                                        
+                                        setTimeout(() => fetchData(), 500);
                                       }
+                                    } catch (axiosError) {
+                                      console.error('Axios request failed:', axiosError);
                                       
-                                      // Refresh data after a small delay to ensure server updates are complete
-                                      setTimeout(() => fetchData(), 500);
+                                      // Fall back to fetch API
+                                      console.log('Trying with fetch API as fallback');
+                                      const fetchResponse = await fetch(url, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Authorization': `Bearer ${token}`,
+                                          'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                          payoutId: payout._id,
+                                          reason: 'Rejected by admin'
+                                        })
+                                      });
+                                      
+                                      if (fetchResponse.ok) {
+                                        const data = await fetchResponse.json();
+                                        console.log('Fetch API response:', data);
+                                        toast.dismiss(loadingToast);
+                                        toast.success('Payout rejected successfully using fetch');
+                                        
+                                        // Update UI
+                                        setPayouts(prevPayouts => 
+                                          prevPayouts.map(p => 
+                                            p._id === payout._id ? { ...p, status: 'rejected' } : p
+                                          )
+                                        );
+                                        
+                                        setTimeout(() => fetchData(), 500);
+                                      } else {
+                                        throw new Error(`Fetch API failed with status: ${fetchResponse.status}`);
+                                      }
                                     }
                                   } catch (error) {
                                     toast.dismiss();
                                     console.error("Payout rejection error:", error);
                                     console.error("Detailed error response:", error.response?.data);
                                     
-                                    // Show more detailed error information
-                                    if (error.response) {
-                                      const errorMsg = error.response.data?.error || error.response.data?.details || error.message;
-                                      toast.error(`Failed to reject payout: ${errorMsg}`);
+                                    toast.error(`Failed to reject payout: ${error.message}`);
+                                    
+                                    // Let's try one more approach - directly use the admin reject function
+                                    try {
+                                      console.log('Attempting direct rejection with backend URL');
+                                      const manualResponse = await fetch('https://campaign-pohg.onrender.com/api/admin/payouts/manual-reject', {
+                                        method: 'POST',
+                                        headers: {
+                                          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+                                          'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                          payoutId: payout._id,
+                                          reason: 'Rejected by admin'
+                                        })
+                                      });
                                       
-                                      // If it's a 404 error, the payout might have been deleted or doesn't exist
-                                      if (error.response.status === 404) {
-                                        toast.error("Payout not found. It may have been already processed or deleted.");
-                                        fetchData(); // Refresh to get the latest data
+                                      if (manualResponse.ok) {
+                                        toast.success('Payout rejected via admin route');
+                                        setTimeout(() => fetchData(), 500);
                                       }
-                                    } else {
-                                      toast.error(`Failed to reject payout: ${error.message}`);
+                                    } catch (finalError) {
+                                      console.error('Final attempt failed:', finalError);
                                     }
                                   }
                                 }}
