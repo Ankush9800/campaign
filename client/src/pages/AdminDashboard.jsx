@@ -6,7 +6,6 @@ import AdminLogin from './AdminLogin';
 import ConversionStats from '../components/ConversionStats';
 import ConversionsTable from '../components/ConversionsTable';
 import Navbar from '../components/Navbar';
-import SubmissionsTable from '../components/SubmissionsTable';
 
 // Main Dashboard Component
 export default function AdminDashboard() {
@@ -2212,8 +2211,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         );
-      case 'submissions':
-        return <SubmissionsTable />;
     }
   };
 
@@ -2263,125 +2260,101 @@ export default function AdminDashboard() {
       .catch(() => toast.error('Failed to copy'));
   };
 
-  // Add new function to fetch only conversions data
-  const fetchConversionsData = async () => {
-    try {
-      setHiqmobiLoading(true);
-      const response = await axios.get('https://campaign-pohg.onrender.com/api/admin/hiqmobi/conversions', {
-        params: {
-          page: conversionPage,
-          limit: conversionLimit,
-          status: conversionStatus
-        }
-      });
-      
-      if (response.status === 200) {
-        const { data, stats } = response.data;
-        setHiqmobiData(data);
-        setConversionStats(stats);
-        toast.success('Conversions data refreshed successfully');
-      }
-    } catch (error) {
-      console.error('Error fetching conversions data:', error);
-      toast.error('Failed to refresh conversions data');
-    } finally {
-      setHiqmobiLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {isCheckingAuth ? (
-        <div className="flex justify-center items-center h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      ) : !isAuthenticated ? (
-        <AdminLogin onLoginSuccess={handleLoginSuccess} />
-      ) : (
-        <>
-          <Navbar />
-          <div className="container mx-auto px-4 py-8">
-            {/* Navigation Tabs */}
-            <div className="border-b border-gray-200 mb-8">
-              <nav className="-mb-px flex space-x-8">
+    <div className="min-h-screen bg-gray-100">
+      <div className="container mx-auto p-4">
+        <div className="bg-white rounded-xl shadow-md">
+          <div className="p-6">
+            <div className="mb-8">
+              <div className="border-b border-gray-200">
+                <nav className="flex space-x-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                   <button 
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`${
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
                       activeTab === 'dashboard' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
+                    }`}
+                    onClick={() => setActiveTab('dashboard')}
                   >
                     Dashboard
                   </button>
                   <button 
-                  onClick={() => setActiveTab('campaigns')}
-                  className={`${
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
                       activeTab === 'campaigns' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
+                    }`}
+                    onClick={() => setActiveTab('campaigns')}
                   >
                     Campaigns
                   </button>
                   <button 
-                  onClick={() => setActiveTab('users')}
-                  className={`${
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
                       activeTab === 'users' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
+                    }`}
+                    onClick={() => setActiveTab('users')}
                   >
                     Users
                   </button>
                   <button 
-                  onClick={() => setActiveTab('payouts')}
-                  className={`${
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
                       activeTab === 'payouts' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
+                    }`}
+                    onClick={() => setActiveTab('payouts')}
                   >
                     Payouts
                   </button>
                   <button 
-                  onClick={() => setActiveTab('conversions')}
-                  className={`${
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
                       activeTab === 'conversions' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium flex items-center`}
+                    }`}
+                    onClick={() => setActiveTab('conversions')}
                   >
                     Conversions
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fetchConversionsData();
-                    }}
-                    className="ml-2 p-1 hover:bg-gray-100 rounded-full"
-                    title="Refresh conversions"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </button>
                   </button>
                   <button 
-                  onClick={() => setActiveTab('submissions')}
-                  className={`${
-                      activeTab === 'submissions' 
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                      activeTab === 'db-conversions' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
+                    }`}
+                    onClick={() => setActiveTab('db-conversions')}
                   >
-                    Submissions
+                    Stored Conversions
+                  </button>
+                  <button 
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                      activeTab === 'hiqmobi' 
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                    onClick={() => setActiveTab('hiqmobi')}
+                  >
+                    HiQmobi
+                  </button>
+                  <button 
+                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                      activeTab === 'settings' 
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                    onClick={() => setActiveTab('settings')}
+                  >
+                    Settings
                   </button>
                 </nav>
+              </div>
             </div>
             {renderDashboardContent()}
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

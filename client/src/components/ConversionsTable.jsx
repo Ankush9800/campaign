@@ -1,5 +1,4 @@
 import React from 'react';
-import { toast } from 'react-hot-toast';
 
 const statusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -60,8 +59,6 @@ const ConversionsTable = ({ conversions, loading }) => {
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UPI ID</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payout</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offer</th>
@@ -74,46 +71,8 @@ const ConversionsTable = ({ conversions, loading }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {conversion.id || 'N/A'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {conversion.phone ? (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-900">{conversion.phone}</span>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(conversion.phone);
-                          toast.success('Phone number copied!');
-                        }}
-                        className="text-gray-400 hover:text-blue-600"
-                        title="Copy phone number"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                      </button>
-                    </div>
-                  ) : 'N/A'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {conversion.upi_id ? (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-900">{conversion.upi_id}</span>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(conversion.upi_id);
-                          toast.success('UPI ID copied!');
-                        }}
-                        className="text-gray-400 hover:text-blue-600"
-                        title="Copy UPI ID"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                      </button>
-                    </div>
-                  ) : 'N/A'}
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {conversion.p3 || 'N/A'}
+                  {conversion.phone || 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[conversion.status?.toLowerCase()] || statusColors.default}`}>

@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
-import { toast } from 'react-hot-toast';
+// import { toast } from 'react-hot-toast';
+
+// Create a temporary toast function until react-hot-toast is installed
+const toast = {
+  success: (message) => {},
+  error: (message) => {}
+};
 
 export default function CampaignPage() {
   const { slug } = useParams();
@@ -35,8 +41,8 @@ export default function CampaignPage() {
     fetchCampaign();
   }, [slug]);
 
-  // If campaign is inactive or paused, redirect to CampaignPaused page
-  if (campaign && (campaign.status === 'inactive' || campaign.status === 'paused')) {
+  // If campaign is paused, redirect to CampaignPaused page
+  if (campaign && campaign.status === 'paused') {
     return <Navigate to="/campaign-paused" replace />;
   }
 
@@ -62,35 +68,38 @@ export default function CampaignPage() {
         throw new Error('Please enter a valid UPI ID (e.g., example@upi)');
       }
 
-      // Submit user details to backend
-      await axios.post('https://campaign-pohg.onrender.com/api/campaign-submissions', {
+      // Encode UPI ID and campaign name for the URL
+      const encodedUPI = encodeURIComponent(formData.upiId);
+      const encodedCampaignName = encodeURIComponent(campaign.name);
+
+      // Build the affiliate link with campaign name as p3
+      const affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}&p3=${encodedCampaignName}`;
+
+      // Submit to our new campaign submissions endpoint
+      const response = await axios.post('https://campaign-pohg.onrender.com/api/campaign-submissions', {
         phone: formData.phone,
         upiId: formData.upiId,
         campaignId: campaign._id,
         campaignName: campaign.name,
-        redirectUrl: campaign.trackingUrl
+        redirectUrl: affiliateLink
       });
 
-      // Mark as successful submission
-      setSubmitSuccess(true);
-      toast.success('Details submitted successfully!');
+      if (response.status === 201) {
+        // Mark as successful submission
+        setSubmitSuccess(true);
+        toast.success('Details submitted successfully!');
 
-      // Encode UPI ID
-      const encodedUPI = encodeURIComponent(formData.upiId);
-      
-      // Encode campaign name
-      const encodedCampaignName = encodeURIComponent(campaign.name);
-
-      // Build the affiliate link
-      const affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}&p3=${encodedCampaignName}`;
-
-      // Set a short timeout before redirecting to allow user to see success message
-      setTimeout(() => {
-        window.location.href = affiliateLink;
-      }, 1500);
-
+        // Short delay to show success message
+        setTimeout(() => {
+          // Redirect to the affiliate link
+          window.location.href = affiliateLink;
+        }, 1000);
+      } else {
+        throw new Error('Failed to submit details');
+      }
     } catch (err) {
-      setSubmitError(err.response?.data?.message || err.message);
+      console.error('Submission error:', err);
+      setSubmitError(err.response?.data?.error || err.message);
       toast.error('Submission failed. Please try again.');
     } finally {
       setSubmitting(false);

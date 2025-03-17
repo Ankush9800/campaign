@@ -9,7 +9,7 @@ const campaignSchema = new mongoose.Schema({
   name: { type: String, required: true },
   offerId: { type: String, required: true },
   payout: { type: Number, required: true },
-  status: { type: String, enum: ['active', 'inactive', 'paused'], default: 'active' },
+  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   description: String,
   requirements: [String],
   trackingUrl: { type: String, required: true },

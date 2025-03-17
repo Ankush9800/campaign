@@ -13,10 +13,14 @@ const campaignSubmissionSchema = new mongoose.Schema({
     },
     campaignId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Campaign',
         required: true
     },
     campaignName: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    redirectUrl: {
         type: String,
         required: true,
         trim: true
@@ -25,11 +29,6 @@ const campaignSubmissionSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'completed', 'rejected'],
         default: 'pending'
-    },
-    redirectUrl: {
-        type: String,
-        required: true,
-        trim: true
     },
     createdAt: {
         type: Date,

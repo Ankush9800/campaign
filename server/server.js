@@ -22,6 +22,7 @@ app.use(cors({
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/payouts', require('./routes/payouts'));
+app.use('/api/campaign-submissions', require('./routes/campaignSubmissions'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
