@@ -81,9 +81,12 @@ export default function CampaignPage() {
 
       // Encode UPI ID
       const encodedUPI = encodeURIComponent(formData.upiId);
+      
+      // Encode campaign name
+      const encodedCampaignName = encodeURIComponent(campaign.name);
 
       // Build the affiliate link
-      const affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}`;
+      const affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}&p3=${encodedCampaignName}`;
 
       // Set a short timeout before redirecting to allow user to see success message
       setTimeout(() => {
