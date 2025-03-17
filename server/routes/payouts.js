@@ -133,7 +133,7 @@ router.post('/manual-process', async (req, res) => {
 });
 
 // Reject payout
-router.put('/:payoutId/reject', async (req, res) => {
+router.post('/:payoutId/reject', async (req, res) => {
   try {
     const { payoutId } = req.params;
     

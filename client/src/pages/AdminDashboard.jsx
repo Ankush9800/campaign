@@ -1895,15 +1895,19 @@ export default function AdminDashboard() {
                                 onClick={async () => {
                                   try {
                                     const token = localStorage.getItem('adminToken');
-                                    toast.loading(`Rejecting payout for ${payout.user?.phone || 'user'}...`);
+                                    const loadingToast = toast.loading(`Rejecting payout for ${payout.user?.phone || 'user'}...`);
                                     
-                                    const response = await axios.put(
+                                    console.log(`Attempting to reject payout with ID: ${payout._id}`);
+                                    
+                                    const response = await axios.post(
                                       `https://campaign-pohg.onrender.com/api/payouts/${payout._id}/reject`, 
                                       { reason: 'Rejected by admin' },
                                       { headers: { 'Authorization': `Bearer ${token}` } }
                                     );
                                     
-                                    toast.dismiss();
+                                    toast.dismiss(loadingToast);
+                                    console.log('Payout rejection response:', response.data);
+                                    
                                     if (response.status === 200) {
                                       toast.success('Payout rejected successfully');
                                       // Update UI immediately to show rejected status
@@ -1928,6 +1932,7 @@ export default function AdminDashboard() {
                                   } catch (error) {
                                     toast.dismiss();
                                     console.error("Payout rejection error:", error);
+                                    console.error("Detailed error response:", error.response?.data);
                                     
                                     // Show more detailed error information
                                     if (error.response) {
