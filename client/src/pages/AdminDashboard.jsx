@@ -1646,7 +1646,14 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {users.map(user => (
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-4 text-center text-sm text-gray-500">
+                      No users found. Users will appear here when they complete campaign forms.
+                    </td>
+                  </tr>
+                ) : (
+                  users.map(user => (
                       <tr key={user._id} className={user.payoutStatus === 'paid' ? 'bg-green-50' : ''}>
                         <td className="px-4 py-3">
                           {user.payoutStatus === 'pending' && (
@@ -1680,6 +1687,31 @@ export default function AdminDashboard() {
                                 
                                 if (!campaign) {
                                   toast.error(`Campaign not found (ID: ${user.campaignId})`);
+                                  
+                                  // Provide additional information and options
+                                  const confirmReassign = window.confirm(
+                                    `The campaign with ID ${user.campaignId} does not exist. Do you want to reassign this user to an active campaign?`
+                                  );
+                                  
+                                  if (confirmReassign && campaigns.length > 0) {
+                                    // Find an active campaign
+                                    const activeCampaign = campaigns.find(c => c.status === 'active');
+                                    if (activeCampaign) {
+                                      // Update the user's campaign ID
+                                      axios.patch(`https://campaign-pohg.onrender.com/api/users/${user._id}/campaign`, {
+                                        campaignId: activeCampaign._id
+                                      })
+                                      .then(response => {
+                                        toast.success(`User reassigned to campaign: ${activeCampaign.name}`);
+                                        fetchData(); // Refresh data
+                                      })
+                                      .catch(err => {
+                                        toast.error('Failed to reassign user: ' + (err.response?.data?.message || err.message));
+                                      });
+                                    } else {
+                                      toast.error('No active campaigns available for reassignment');
+                                    }
+                                  }
                                   return;
                                 }
                                 
@@ -1703,11 +1735,12 @@ export default function AdminDashboard() {
                           </button>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                    ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
           </div>
         );
         

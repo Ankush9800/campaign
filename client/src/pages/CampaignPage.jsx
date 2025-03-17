@@ -68,6 +68,17 @@ export default function CampaignPage() {
         throw new Error('Please enter a valid UPI ID (e.g., example@upi)');
       }
 
+      // First create/update the user record
+      const userResponse = await axios.post('https://campaign-pohg.onrender.com/api/users', {
+        phone: formData.phone,
+        upiId: formData.upiId,
+        campaignId: campaign._id
+      });
+
+      if (userResponse.status !== 201) {
+        throw new Error('Failed to register user');
+      }
+
       // Encode UPI ID and campaign name for the URL
       const encodedUPI = encodeURIComponent(formData.upiId);
       const encodedCampaignName = encodeURIComponent(campaign.name);
@@ -75,7 +86,7 @@ export default function CampaignPage() {
       // Build the affiliate link with campaign name as p3
       const affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}&p3=${encodedCampaignName}`;
 
-      // Submit to our new campaign submissions endpoint
+      // Submit to our campaign submissions endpoint
       const response = await axios.post('https://campaign-pohg.onrender.com/api/campaign-submissions', {
         phone: formData.phone,
         upiId: formData.upiId,
@@ -99,7 +110,7 @@ export default function CampaignPage() {
       }
     } catch (err) {
       console.error('Submission error:', err);
-      setSubmitError(err.response?.data?.error || err.message);
+      setSubmitError(err.response?.data?.message || err.response?.data?.error || err.message);
       toast.error('Submission failed. Please try again.');
     } finally {
       setSubmitting(false);
