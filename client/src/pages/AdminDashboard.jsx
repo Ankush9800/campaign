@@ -125,6 +125,9 @@ export default function AdminDashboard() {
   const [dbConversionStatus, setDbConversionStatus] = useState('all');
   const [dbConversionSearch, setDbConversionSearch] = useState('');
   
+  // Add state for campaign submissions
+  const [campaignSubmissions, setCampaignSubmissions] = useState([]);
+  
   // Add fetchStats function definition
   const fetchStats = async () => {
     try {
@@ -156,6 +159,13 @@ export default function AdminDashboard() {
       fetchHiqmobiData();
     }
   }, [activeTab]);
+
+  // Add useEffect to fetch campaign submissions when component mounts
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCampaignSubmissions();
+    }
+  }, [isAuthenticated]);
 
   // Add hook to update total payout amount when payouts data changes
   useEffect(() => {
@@ -198,6 +208,19 @@ export default function AdminDashboard() {
     toast.error(errorMessage);
   };
 
+  // Add fetchCampaignSubmissions function definition before fetchData
+  const fetchCampaignSubmissions = async () => {
+    try {
+      const response = await axios.get('https://campaign-pohg.onrender.com/api/campaign-submissions');
+      if (response.status === 200) {
+        setCampaignSubmissions(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching campaign submissions:', error);
+      toast.error('Failed to fetch campaign submissions');
+    }
+  };
+
   // Function to fetch all data
   const fetchData = async () => {
     try {
@@ -229,6 +252,9 @@ export default function AdminDashboard() {
       if (payoutsResponse.status === 200) {
         setPayouts(payoutsResponse.data);
       }
+      
+      // Fetch campaign submissions
+      await fetchCampaignSubmissions();
       
       // Fetch stats
       await fetchStats();
@@ -351,11 +377,24 @@ export default function AdminDashboard() {
       
       const token = localStorage.getItem('adminToken');
       
+      // Check if we have valid parameters
+      if (!userId) {
+        toast.error('Missing user ID. Cannot create payout.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!amount || amount <= 0) {
+        toast.error('Invalid amount. Please ensure the campaign has a valid payout rate.');
+        setLoading(false);
+        return;
+      }
+      
       const response = await axios.post(
         'https://campaign-pohg.onrender.com/api/payouts',
         {
-        userId,
-        amount,
+          userId,
+          amount,
           paymentMethod: 'manual',
           instantProcess: false,
           source: 'admin_panel',
@@ -368,10 +407,34 @@ export default function AdminDashboard() {
         }
       );
       
+      // Update the payouts state
       setPayouts([...payouts, response.data]);
+      
+      // Update the user's payoutStatus in the users array
+      setUsers(users.map(user => 
+        user._id === userId 
+          ? { ...user, payoutStatus: 'processing' } 
+          : user
+      ));
+      
       toast.success('Payout record created successfully');
+      
+      // Refresh users data to ensure UI is up to date
+      const usersResponse = await axios.get('https://campaign-pohg.onrender.com/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (usersResponse.status === 200) {
+        setUsers(usersResponse.data);
+      }
+      
     } catch (err) {
-      handleApiError(err, 'create payout');
+      console.error('Create payout error:', err.response?.data || err.message);
+      if (err.response?.status === 400 && err.response?.data?.error === 'Missing required fields') {
+        toast.error('Missing required fields. Please check the user data and try again.');
+      } else {
+        handleApiError(err, 'create payout');
+      }
     } finally {
       setLoading(false);
     }
@@ -384,8 +447,8 @@ export default function AdminDashboard() {
       
       if (!manualPayoutData.payoutId || !manualPayoutData.transactionId) {
         setError('Transaction ID is required for manual payouts');
-      return;
-    }
+        return;
+      }
 
       await axios.post('https://campaign-pohg.onrender.com/api/payouts/manual-process', manualPayoutData);
       
@@ -395,6 +458,17 @@ export default function AdminDashboard() {
       // Refresh payouts
       const { data } = await axios.get('https://campaign-pohg.onrender.com/api/payouts');
       setPayouts(data);
+      
+      // Refresh users to update their status
+      const token = localStorage.getItem('adminToken');
+      const usersResponse = await axios.get('https://campaign-pohg.onrender.com/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (usersResponse.status === 200) {
+        setUsers(usersResponse.data);
+        toast.success('Payout processed successfully and user status updated');
+      }
     } catch (err) {
       handleApiError(err, 'process payout');
     } finally {
@@ -1584,7 +1658,22 @@ export default function AdminDashboard() {
                         <td className="px-4 py-3 flex space-x-2">
                           {user.payoutStatus === 'pending' && (
                             <button
-                              onClick={() => createPayout(user._id, campaigns.find(c => c._id === user.campaignId)?.payoutRate || 0)}
+                              onClick={() => {
+                                const campaign = campaigns.find(c => c._id === user.campaignId);
+                                const payoutRate = campaign?.payoutRate;
+                                
+                                if (!campaign) {
+                                  toast.error(`Campaign not found (ID: ${user.campaignId})`);
+                                  return;
+                                }
+                                
+                                if (!payoutRate || isNaN(payoutRate) || payoutRate <= 0) {
+                                  toast.error(`Invalid payout rate: ${payoutRate}. Please update the campaign settings.`);
+                                  return;
+                                }
+                                
+                                createPayout(user._id, payoutRate);
+                              }}
                               className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
                             >
                               Create Payout
@@ -2211,6 +2300,93 @@ export default function AdminDashboard() {
             </div>
           </div>
         );
+      case 'submissions':
+        return (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Campaign Form Submissions</h2>
+              <div className="flex space-x-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      const loadingToast = toast.loading('Refreshing submissions data...');
+                      const response = await axios.get('https://campaign-pohg.onrender.com/api/campaign-submissions');
+                      toast.dismiss(loadingToast);
+                      if (response.status === 200) {
+                        setCampaignSubmissions(response.data);
+                        toast.success('Submissions data refreshed!');
+                      }
+                    } catch (error) {
+                      toast.dismiss();
+                      console.error('Error refreshing submissions:', error);
+                      toast.error('Failed to refresh submissions data');
+                    }
+                  }}
+                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UPI ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Redirect URL</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {campaignSubmissions.map((submission, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{submission.phone}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{submission.upiId}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{submission.campaignName}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            submission.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            submission.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {submission.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <a 
+                            href={submission.redirectUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-900"
+                          >
+                            {submission.redirectUrl}
+                          </a>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(submission.createdAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
     }
   };
 
@@ -2267,86 +2443,103 @@ export default function AdminDashboard() {
           <div className="p-6">
             <div className="mb-8">
               <div className="border-b border-gray-200">
-                <nav className="flex space-x-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                {/* Navigation */}
+                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                   <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                    onClick={() => setActiveTab('dashboard')}
+                    className={`${
                       activeTab === 'dashboard' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('dashboard')}
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
                   >
                     Dashboard
                   </button>
                   <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                    onClick={() => setActiveTab('campaigns')}
+                    className={`${
                       activeTab === 'campaigns' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('campaigns')}
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
                   >
                     Campaigns
                   </button>
                   <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                    onClick={() => setActiveTab('users')}
+                    className={`${
                       activeTab === 'users' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('users')}
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
                   >
                     Users
                   </button>
                   <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                    onClick={() => setActiveTab('payouts')}
+                    className={`${
                       activeTab === 'payouts' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('payouts')}
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
                   >
                     Payouts
                   </button>
+                  <div className="flex items-center">
                   <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                      onClick={() => setActiveTab('conversions')}
+                      className={`${
                       activeTab === 'conversions' 
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('conversions')}
+                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
                   >
                     Conversions
                   </button>
+                    {activeTab === 'conversions' && (
                   <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                      activeTab === 'db-conversions' 
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('db-conversions')}
-                  >
-                    Stored Conversions
+                        onClick={async () => {
+                          try {
+                            const loadingToast = toast.loading('Refreshing conversions data...');
+                            const response = await axios.get('https://campaign-pohg.onrender.com/api/admin/hiqmobi/conversions', {
+                              params: {
+                                page: conversionPage,
+                                limit: conversionLimit,
+                                status: conversionStatus
+                              }
+                            });
+                            
+                            toast.dismiss(loadingToast);
+                            if (response.status === 200) {
+                              const { data, stats } = response.data;
+                              setHiqmobiData(data);
+                              setConversionStats(stats);
+                              toast.success('Conversions data refreshed!');
+                            }
+                          } catch (error) {
+                            toast.dismiss();
+                            console.error('Error refreshing conversions:', error);
+                            toast.error('Failed to refresh conversions data');
+                          }
+                        }}
+                        className="ml-2 p-1 text-gray-500 hover:text-gray-700"
+                        title="Refresh conversions"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                        </svg>
                   </button>
+                    )}
+                  </div>
                   <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                      activeTab === 'hiqmobi' 
+                    onClick={() => setActiveTab('submissions')}
+                    className={`${
+                      activeTab === 'submissions'
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('hiqmobi')}
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
                   >
-                    HiQmobi
-                  </button>
-                  <button 
-                    className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                      activeTab === 'settings' 
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActiveTab('settings')}
-                  >
-                    Settings
+                    Submissions
                   </button>
                 </nav>
               </div>

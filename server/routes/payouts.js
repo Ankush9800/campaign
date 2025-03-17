@@ -32,6 +32,10 @@ router.post('/', async (req, res) => {
     });
     
     await payout.save();
+    
+    // Update the user's payoutStatus to 'processing'
+    await User.findByIdAndUpdate(userId, { payoutStatus: 'processing' });
+    
     res.status(201).json(payout);
   } catch (err) {
     console.error('Error creating payout:', err);
