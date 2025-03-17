@@ -159,7 +159,7 @@ export default function AdminDashboard() {
       fetchHiqmobiData();
     }
   }, [activeTab]);
-
+  
   // Add useEffect to fetch campaign submissions when component mounts
   useEffect(() => {
     if (isAuthenticated) {
@@ -393,8 +393,8 @@ export default function AdminDashboard() {
       const response = await axios.post(
         'https://campaign-pohg.onrender.com/api/payouts',
         {
-          userId,
-          amount,
+        userId,
+        amount,
           paymentMethod: 'manual',
           instantProcess: false,
           source: 'admin_panel',
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
           fetchData(); // Refresh data to get the latest state
         }
       } else {
-        handleApiError(err, 'create payout');
+      handleApiError(err, 'create payout');
       }
     } finally {
       setLoading(false);
@@ -463,8 +463,8 @@ export default function AdminDashboard() {
       
       if (!manualPayoutData.payoutId || !manualPayoutData.transactionId) {
         setError('Transaction ID is required for manual payouts');
-        return;
-      }
+      return;
+    }
 
       await axios.post('https://campaign-pohg.onrender.com/api/payouts/manual-process', manualPayoutData);
       
@@ -1737,10 +1737,10 @@ export default function AdminDashboard() {
                       </tr>
                     ))
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         );
         
