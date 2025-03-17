@@ -29,12 +29,16 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
+    // Generate a unique ID for manual payouts to avoid duplicate key errors
+    const uniqueId = `manual_${new Date().getTime()}_${Math.random().toString(36).substring(2, 15)}`;
+    
     const payout = new Payout({
       user: userId,
       amount,
       paymentMethod,
       status: 'pending',
-      source: 'manual'
+      source: 'manual',
+      conversionId: uniqueId // Add a unique conversion ID for each manual payout
     });
     
     await payout.save();

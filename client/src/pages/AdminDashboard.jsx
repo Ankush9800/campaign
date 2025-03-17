@@ -442,6 +442,12 @@ export default function AdminDashboard() {
         const errorDetails = err.response?.data?.details || 'Unknown server error';
         toast.error(`Server error: ${errorDetails}`);
         console.error('Detailed server error:', err.response?.data);
+        
+        // If it's a duplicate key error, refresh the data and let the user know
+        if (errorDetails.includes('duplicate key error') || errorDetails.includes('E11000')) {
+          toast.error('There was a duplicate record error. Please try again.');
+          fetchData(); // Refresh data to get the latest state
+        }
       } else {
         handleApiError(err, 'create payout');
       }
