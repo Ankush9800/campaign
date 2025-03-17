@@ -3,6 +3,7 @@ const router = express.Router();
 const Payout = require('../models/Payout');
 const User = require('../models/User');
 const axios = require('axios');
+const mongoose = require('mongoose');
 
 // Get all payouts
 router.get('/', async (req, res) => {
@@ -136,6 +137,10 @@ router.put('/:payoutId/reject', async (req, res) => {
   try {
     const { payoutId } = req.params;
     
+    if (!payoutId || !mongoose.Types.ObjectId.isValid(payoutId)) {
+      return res.status(400).json({ error: 'Invalid payout ID format' });
+    }
+    
     const payout = await Payout.findById(payoutId);
     if (!payout) {
       return res.status(404).json({ error: 'Payout not found' });
@@ -154,11 +159,24 @@ router.put('/:payoutId/reject', async (req, res) => {
     payout.rejectionReason = req.body.reason || 'Rejected by admin';
     await payout.save();
     
-    // Update user's payout status if needed
-    await User.findByIdAndUpdate(payout.user, { 
-      payoutStatus: 'rejected',
-      lastPayoutRejectionReason: req.body.reason || 'Rejected by admin'
-    });
+    // Check if the user exists before updating
+    if (payout.user) {
+      try {
+        const user = await User.findById(payout.user);
+        if (user) {
+          user.payoutStatus = 'rejected';
+          user.lastPayoutRejectionReason = req.body.reason || 'Rejected by admin';
+          await user.save();
+        } else {
+          console.warn(`User not found for payout ${payoutId}. User ID: ${payout.user}`);
+        }
+      } catch (userError) {
+        console.error('Error updating user after payout rejection:', userError);
+        // Continue even if user update fails
+      }
+    } else {
+      console.warn(`No user associated with payout ${payoutId}`);
+    }
     
     res.json({ success: true, payout });
   } catch (err) {

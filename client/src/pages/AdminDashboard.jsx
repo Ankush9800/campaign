@@ -1894,18 +1894,54 @@ export default function AdminDashboard() {
                               <button
                                 onClick={async () => {
                                   try {
-                                      toast.success(`Rejecting payout for ${payout.user?.phone || 'user'}`);
-                                      const response = await axios.put(`https://campaign-pohg.onrender.com/api/payouts/${payout._id}/reject`, {
-                                        reason: 'Rejected by admin' 
-                                      });
+                                    const token = localStorage.getItem('adminToken');
+                                    toast.loading(`Rejecting payout for ${payout.user?.phone || 'user'}...`);
+                                    
+                                    const response = await axios.put(
+                                      `https://campaign-pohg.onrender.com/api/payouts/${payout._id}/reject`, 
+                                      { reason: 'Rejected by admin' },
+                                      { headers: { 'Authorization': `Bearer ${token}` } }
+                                    );
+                                    
+                                    toast.dismiss();
+                                    if (response.status === 200) {
+                                      toast.success('Payout rejected successfully');
+                                      // Update UI immediately to show rejected status
+                                      setPayouts(prevPayouts => 
+                                        prevPayouts.map(p => 
+                                          p._id === payout._id ? { ...p, status: 'rejected' } : p
+                                        )
+                                      );
                                       
-                                      if (response.status === 200) {
-                                        toast.success('Payout rejected successfully');
-                                        fetchData(); // Refresh the data
+                                      // If the payout is associated with a user, update the user's payout status
+                                      if (payout.user) {
+                                        setUsers(prevUsers => 
+                                          prevUsers.map(u => 
+                                            u._id === payout.user._id ? { ...u, payoutStatus: 'rejected' } : u
+                                          )
+                                        );
                                       }
+                                      
+                                      // Refresh data after a small delay to ensure server updates are complete
+                                      setTimeout(() => fetchData(), 500);
+                                    }
                                   } catch (error) {
-                                    toast.error(`Failed to reject payout: ${error.message}`);
+                                    toast.dismiss();
                                     console.error("Payout rejection error:", error);
+                                    
+                                    // Show more detailed error information
+                                    if (error.response) {
+                                      const errorMsg = error.response.data?.error || error.response.data?.details || error.message;
+                                      toast.error(`Failed to reject payout: ${errorMsg}`);
+                                      
+                                      // If it's a 404 error, the payout might have been deleted or doesn't exist
+                                      if (error.response.status === 404) {
+                                        toast.error("Payout not found. It may have been already processed or deleted.");
+                                        fetchData(); // Refresh to get the latest data
+                                      }
+                                    } else {
+                                      toast.error(`Failed to reject payout: ${error.message}`);
+                                    }
                                   }
                                 }}
                                 className="text-red-600 hover:text-red-900"
