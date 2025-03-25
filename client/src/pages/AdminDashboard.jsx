@@ -1075,6 +1075,7 @@ export default function AdminDashboard() {
   // Add fetch function for HiQmobi data
   const fetchHiqmobiData = async () => {
     try {
+      setHiqmobiLoading(true);
       const response = await axios.get('https://campaign-pohg.onrender.com/api/admin/hiqmobi/conversions', {
         params: {
           page: 1,
@@ -1084,12 +1085,51 @@ export default function AdminDashboard() {
       
       if (response.status === 200) {
         const { data, stats } = response.data;
-        setHiqmobiData(data);
-        setConversionStats(stats);
+        console.log('HiQmobi data received:', data?.length || 0, 'conversions');
+        
+        if (Array.isArray(data)) {
+          setHiqmobiData(data);
+          setConversionStats(stats || {
+            total: data.length,
+            pending: data.filter(c => c.status === 'pending').length,
+            completed: data.filter(c => c.status === 'completed').length,
+            rejected: data.filter(c => c.status === 'rejected').length,
+            totalPayout: data.reduce((sum, c) => sum + (c.payout || 0), 0)
+          });
+          
+          if (data.length === 0) {
+            toast.info('No HiQmobi conversion data available. Either there are no conversions or the API connection needs to be verified.');
+          } else {
+            toast.success(`Successfully loaded ${data.length} conversions`);
+          }
+        } else {
+          console.error('Invalid HiQmobi data format:', data);
+          setHiqmobiData([]);
+          setConversionStats({
+            total: 0,
+            pending: 0,
+            completed: 0,
+            rejected: 0,
+            totalPayout: 0
+          });
+          toast.error('Failed to parse conversion data: Invalid format');
+        }
+      } else {
+        throw new Error(`Failed to fetch conversion data: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error fetching HiQmobi data:', error);
-      setError('Failed to fetch conversion data');
+      setHiqmobiData([]);
+      setConversionStats({
+        total: 0,
+        pending: 0,
+        completed: 0,
+        rejected: 0,
+        totalPayout: 0
+      });
+      toast.error(`Failed to fetch conversion data: ${error.message}`);
+    } finally {
+      setHiqmobiLoading(false);
     }
   };
 
