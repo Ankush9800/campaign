@@ -1076,12 +1076,18 @@ export default function AdminDashboard() {
   const fetchHiqmobiData = async () => {
     try {
       setHiqmobiLoading(true);
-      const response = await axios.get('https://campaign-pohg.onrender.com/api/admin/hiqmobi/conversions', {
+      console.log('Fetching HiQmobi data...');
+      
+      // Use the local server URL instead of the render.com URL
+      const response = await axios.get('/api/admin/hiqmobi/conversions', {
         params: {
           page: 1,
-          limit: 10
+          limit: 50,
+          refresh: true
         }
       });
+      
+      console.log('HiQmobi API response:', response.data);
       
       if (response.status === 200) {
         const { data, stats } = response.data;

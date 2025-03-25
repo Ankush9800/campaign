@@ -216,27 +216,20 @@ router.get('/payouts', async (req, res) => {
 // HiQmobi proxy endpoint
 router.get('/hiqmobi/conversions', async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, limit = 10, status, refresh = false } = req.query;
     const API_TOKEN = process.env.HIQMOBI_API_TOKEN || '15t01kbcjzi35of3ua1j55eilvpkwtboqi6i';
     
-    console.log(`Fetching real HiQmobi data with token ${API_TOKEN.substring(0, 5)}...`);
-    console.log(`Request params: page=${page}, limit=${limit}, status=${status || 'all'}`);
+    console.log(`Fetching HiQmobi data with token ${API_TOKEN.substring(0, 5)}...`);
+    console.log(`Request params: page=${page}, limit=${limit}, status=${status || 'all'}, refresh=${refresh}`);
     
-    const apiUrl = `https://api.hiqmobi.com/api/conversion`;
-    console.log(`Making request to: ${apiUrl}`);
+    // Use the direct URL that works when tested manually
+    const directApiUrl = `https://api.hiqmobi.com/api/conversion?api_token=${API_TOKEN}&page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`;
+    console.log(`Making direct request to: ${directApiUrl}`);
     
-    const response = await axios.get(apiUrl, {
-      params: {
-        api_token: API_TOKEN,
-        page,
-        limit,
-        ...(status && { status })
-      }
-    });
+    const response = await axios.get(directApiUrl);
 
     console.log(`HiQmobi API response status: ${response.status}`);
-    console.log(`HiQmobi API response success: ${response.data?.success}`);
-    console.log(`HiQmobi API data count: ${response.data?.data?.length || 0}`);
+    console.log(`HiQmobi API response:`, JSON.stringify(response.data, null, 2).substring(0, 500) + '...');
     
     // Handle the success case with empty data array
     if (response.data && response.data.success === true && Array.isArray(response.data.data)) {
@@ -245,20 +238,23 @@ router.get('/hiqmobi/conversions', async (req, res) => {
       
       // If data is completely empty, provide some mock data for testing
       if (dataToProcess.length === 0) {
-        console.log('HiQmobi returned an empty data array. Using mock data for testing.');
-        dataToProcess = [
-          {
-            clickid: "test-click-id-1",
-            offerid: "123",
-            goalName: "Test Offer",
-            p1: "9876543210",
-            p2: "test@upi",
-            ip: "192.168.1.1",
-            status: "pending",
-            payout: 100,
-            created_at: new Date().toISOString()
-          }
-        ];
+        console.log('HiQmobi returned an empty data array.');
+        if (refresh) {
+          console.log('Using mock data for testing since refresh was requested.');
+          dataToProcess = [
+            {
+              clickid: "test-click-id-1",
+              offerid: "123",
+              goalName: "Test Offer",
+              p1: "9876543210",
+              p2: "test@upi",
+              ip: "192.168.1.1",
+              status: "pending",
+              payout: 100,
+              created_at: new Date().toISOString()
+            }
+          ];
+        }
       }
       
       // Log sample data to understand the structure
