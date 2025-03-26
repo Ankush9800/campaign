@@ -46,12 +46,13 @@ class HiqmobiService {
                     await Conversion.findOneAndUpdate(
                         { clickId },
                         {
-                            phone: conv.p1 || conv.phone || 'unknown',
-                            upiId: conv.p2 || conv.upi_id || '',
+                            phone: conv.p1 || conv.aff_sub1 || conv.phone || 'unknown',
+                            upiId: conv.p2 || conv.aff_sub2 || conv.upi_id || '',
                             status: conv.status || 'pending',
                             payout: conv.payout || 100,
                             offerId: conv.offerid || conv.offer_id || 0,
                             offerName: conv.goalName || conv.offer_name || 'Unknown Offer',
+                            campaignName: conv.p3 || conv.aff_sub3 || '',
                             ip: conv.ip || '',
                             createdAt: conv.created_at || new Date()
                         },

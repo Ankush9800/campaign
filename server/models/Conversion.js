@@ -8,6 +8,7 @@ const ConversionSchema = new mongoose.Schema({
     payout: Number,
     offerId: String,
     offerName: String,
+    campaignName: String,
     ip: String,
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     source: { type: String, default: 'hiqmobi' },

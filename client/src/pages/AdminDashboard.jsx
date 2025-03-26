@@ -57,6 +57,7 @@ export default function AdminDashboard() {
     payoutRate: '',
     status: 'active',
     details: '',
+    partnerType: 'standard',
     howItWorks: [
       { title: 'Enter your details', description: 'Fill in your mobile number and UPI ID' },
       { title: 'Complete offer requirements', description: 'Follow the instructions on the next page' },
@@ -558,6 +559,7 @@ export default function AdminDashboard() {
         offerId: formData.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
         payout: parseFloat(formData.payoutRate),
         shareUrl: formData.trackingUrl.trim(),
+        partnerType: formData.partnerType,
         howItWorks: formData.howItWorks || [],
         details: formData.details || ''
       };
@@ -600,6 +602,7 @@ export default function AdminDashboard() {
       payoutRate: campaign.payoutRate,
       status: campaign.status,
       details: campaign.details || '',
+      partnerType: campaign.partnerType,
       howItWorks: campaign.howItWorks || defaultHowItWorks,
       // Add missing required fields
       offerId: campaign.offerId || `${campaign.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
@@ -664,6 +667,7 @@ export default function AdminDashboard() {
       details: '',
       offerId: '',
       payout: '',
+      partnerType: 'standard',
       howItWorks: [
         { title: 'Enter your details', description: 'Fill in your mobile number and UPI ID' },
         { title: 'Complete offer requirements', description: 'Follow the instructions on the next page' },
@@ -786,10 +790,10 @@ export default function AdminDashboard() {
       await fetchHiqmobiData();
       
       // Process each conversion that has all the required fields
+      // Support both parameter formats (p1/p2/p3 and aff_sub1/aff_sub2/aff_sub3)
       const validConversions = hiqmobiData.filter(conv => 
         conv.clickid && 
-        conv.p1 && 
-        conv.p2 // Ensure we have all required fields
+        ((conv.p1 && conv.p2) || (conv.aff_sub1 && conv.aff_sub2)) // Check for either parameter format
       );
       
       if (validConversions.length === 0) {
@@ -815,8 +819,12 @@ export default function AdminDashboard() {
             continue;
           }
           
+          // Get phone and UPI from either p1/p2 or aff_sub1/aff_sub2 parameters
+          const phone = conv.p1 || conv.aff_sub1;
+          const upiId = conv.p2 || conv.aff_sub2;
+          
           // Process the conversion
-          await processConversion(conv.p1, conv.p2, conv.offerid, conv.clickid);
+          await processConversion(phone, upiId, conv.offerid, conv.clickid);
           processedCount++;
           initialPayoutCount++;
           pendingVerificationCount++;
@@ -1398,6 +1406,22 @@ export default function AdminDashboard() {
                 <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
               </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Partner Type</label>
+                  <select
+                    name="partnerType"
+                    value={formData.partnerType}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  >
+                    <option value="standard">Standard (p1, p2, p3)</option>
+                    <option value="aff_sub">Affiliate Sub (aff_sub1, aff_sub2, aff_sub3)</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select the URL parameter format used by this campaign's affiliate partner
+                  </p>
                 </div>
 
                 <div>

@@ -83,8 +83,15 @@ export default function CampaignPage() {
       const encodedUPI = encodeURIComponent(formData.upiId);
       const encodedCampaignName = encodeURIComponent(campaign.name);
 
-      // Build the affiliate link with campaign name as p3
-      const affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}&p3=${encodedCampaignName}`;
+      // Build the affiliate link based on partner type
+      let affiliateLink;
+      if (campaign.partnerType === 'aff_sub') {
+        // For partners using aff_sub parameters
+        affiliateLink = `${campaign.trackingUrl}?aff_sub1=${formData.phone}&aff_sub2=${encodedUPI}&aff_sub3=${encodedCampaignName}`;
+      } else {
+        // For standard partners using p1, p2, p3 parameters
+        affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}&p3=${encodedCampaignName}`;
+      }
 
       // Submit to our campaign submissions endpoint
       const response = await axios.post('https://campaign-pohg.onrender.com/api/campaign-submissions', {

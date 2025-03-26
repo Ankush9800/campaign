@@ -267,8 +267,9 @@ router.get('/hiqmobi/conversions', async (req, res) => {
         .filter(conv => conv.clickid || conv.id) // Accept either clickid or id field
         .map(conv => ({
           id: conv.clickid || conv.id || 'unknown',
-          phone: conv.p1 || conv.phone || 'unknown',
-          upi_id: conv.p2 || conv.upi_id || '',
+          phone: conv.p1 || conv.aff_sub1 || conv.phone || 'unknown',
+          upi_id: conv.p2 || conv.aff_sub2 || conv.upi_id || '',
+          campaign_name: conv.p3 || conv.aff_sub3 || '',
           status: conv.status || 'pending',
           payout: conv.payout || 100,
           offer_id: conv.offerid || conv.offer_id || 0,

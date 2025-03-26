@@ -17,6 +17,7 @@ const campaignSchema = new mongoose.Schema({
   shareUrl: { type: String },
   imageUrl: { type: String },
   details: { type: String },
+  partnerType: { type: String, enum: ['standard', 'aff_sub'], default: 'standard' },
   howItWorks: {
     type: [howItWorksStepSchema],
     default: [
