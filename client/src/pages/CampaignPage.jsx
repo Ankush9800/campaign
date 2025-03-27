@@ -87,10 +87,19 @@ export default function CampaignPage() {
       let affiliateLink;
       if (campaign.partnerType === 'aff_sub') {
         // For partners using aff_sub parameters
-        affiliateLink = `${campaign.trackingUrl}?aff_sub1=${formData.phone}&aff_sub2=${encodedUPI}&aff_sub3=${encodedCampaignName}`;
+        // Check if the tracking URL already contains query parameters
+        const separator = campaign.trackingUrl.includes('?') ? '&' : '?';
+        
+        // Generate a unique click ID (timestamp + random string)
+        const clickId = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+        
+        // Build affiliate link with aff_sub parameters and click ID
+        affiliateLink = `${campaign.trackingUrl}${separator}aff_click_id=${clickId}&aff_sub1=${formData.phone}&aff_sub2=${encodedUPI}&aff_sub3=${encodedCampaignName}`;
       } else {
         // For standard partners using p1, p2, p3 parameters
-        affiliateLink = `${campaign.trackingUrl}?p1=${formData.phone}&p2=${encodedUPI}&p3=${encodedCampaignName}`;
+        // Check if the tracking URL already contains query parameters
+        const separator = campaign.trackingUrl.includes('?') ? '&' : '?';
+        affiliateLink = `${campaign.trackingUrl}${separator}p1=${formData.phone}&p2=${encodedUPI}&p3=${encodedCampaignName}`;
       }
 
       // Submit to our campaign submissions endpoint

@@ -53,6 +53,7 @@ class HiqmobiService {
                             offerId: conv.offerid || conv.offer_id || 0,
                             offerName: conv.goalName || conv.offer_name || 'Unknown Offer',
                             campaignName: conv.p3 || conv.aff_sub3 || '',
+                            affClickId: conv.aff_click_id || null,
                             ip: conv.ip || '',
                             createdAt: conv.created_at || new Date()
                         },

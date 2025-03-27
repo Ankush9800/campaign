@@ -270,6 +270,7 @@ router.get('/hiqmobi/conversions', async (req, res) => {
           phone: conv.p1 || conv.aff_sub1 || conv.phone || 'unknown',
           upi_id: conv.p2 || conv.aff_sub2 || conv.upi_id || '',
           campaign_name: conv.p3 || conv.aff_sub3 || '',
+          aff_click_id: conv.aff_click_id || null,
           status: conv.status || 'pending',
           payout: conv.payout || 100,
           offer_id: conv.offerid || conv.offer_id || 0,
@@ -293,6 +294,8 @@ router.get('/hiqmobi/conversions', async (req, res) => {
               payout: conv.payout,
               offerId: conv.offer_id,
               offerName: conv.offer_name,
+              campaignName: conv.campaign_name,
+              affClickId: conv.aff_click_id,
               ip: conv.ip,
               createdAt: conv.created_at
             },
